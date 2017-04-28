@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "operator+(Integer const&amp;, Integer const&amp;):Integer.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "ans[1]">
+            </PersistentString>
+            <PersistentString
+               value = "ans[2]">
+            </PersistentString>
+            <PersistentString
+               value = "ans.c_str()">
+            </PersistentString>
+            <PersistentString
+               value = "ans[0]">
+            </PersistentString>
+            <PersistentString
+               value = "ans[3]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "operator*(Integer const&amp;, Integer const&amp;):Integer.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "j">
+            </PersistentString>
+            <PersistentString
+               value = "a.num">
+            </PersistentString>
+            <PersistentString
+               value = "b.num">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Decimal::operator+(NumberBase const&amp;):Decimal.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "operator-(Integer const&amp;, Integer const&amp;):Integer.cpp">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
