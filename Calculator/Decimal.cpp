@@ -227,6 +227,13 @@ ostream& Decimal::output(ostream &os) const
 	// icreases decimal_place every time an extra 0 is being appended
 	// pos stands for the position of the decimal point
 
+	if (denominator == "1")
+	{
+		quotient = numerator;
+		os << ((sign < 0)?"-":"") << quotient;
+		return os;
+	}
+	
 	while (lenA < lenB)
 	{// not enough digits to begin with
 		if (!decimal_place) pos++;
@@ -244,7 +251,7 @@ ostream& Decimal::output(ostream &os) const
 			++decimal_place;
 			continue;
 		}
-		if (numerator[0] == '0')
+		else if (numerator[0] == '0')
 		{// remaining 0 from dividend exist when the previous division generates no remainder
 			if (numerator.length() == 1) { numerator = "";  continue; }
 			quotient.num.push_back('0');

@@ -711,6 +711,17 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						{
 
 						}
+						else if (stk.top()->getNum().find("!") != string::npos)
+						{
+							string tmp = stk.top()->getNum();
+							tmp.erase(0, 1);
+							tmp.pop_back();
+							tmp.pop_back();
+							stk.top()->setNum(tmp);
+							Integer::Factorial(*(Integer*)stk.top());
+							Value = stk.top();
+							stk.pop();
+						}
 						else
 						{
 							Value = stk.top();

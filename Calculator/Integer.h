@@ -10,10 +10,7 @@ class Decimal;
 
 class Integer : public NumberBase
 {
-	//protected:
-	//string num;
-	//char type;
-	//char sign;
+	
 public:
 	friend class Decimal;
 	//friend class std::basic_ostream<char, std::char_traits<char>>;
@@ -24,6 +21,7 @@ public:
 	Integer(const string&);
 	~Integer();
 	NumberBase& Pwr(const NumberBase &b);
+	static void Factorial(Integer&);
 	//NumberBase& operator +(const NumberBase & b);
 	//NumberBase& operator -(const NumberBase & b) ;
 	//NumberBase& operator *(const NumberBase & b) ;

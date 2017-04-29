@@ -70,6 +70,19 @@ NumberBase& Integer::Pwr(const NumberBase &p)
 	return  *this;
 }
 
+void Integer::Factorial(Integer &b)
+{
+	Integer tmp = b;
+	for (Integer i = b - 2; i >= 2; i = i - 2)
+	{
+		tmp = tmp + i;
+		b = b * tmp;
+	}
+	
+}
+
+
+
 Integer& operator +(const Integer&a, const Integer &b)
 {
 	/*
