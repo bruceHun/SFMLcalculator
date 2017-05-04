@@ -484,7 +484,25 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			}
 			else
 			{
-				stream << " ";
+				string base = stream.str().substr(stream.str().find_last_of("("));
+				base.erase(0, 1);
+				base.pop_back(); base.pop_back();
+				if (Integer(base) > Integer(10000))
+				{
+					stream.str("");
+					stream << "Sorry, It'll take forever";
+					ResultOutputted = true;
+					PowerON			= false;
+					AlgebraON		= false;
+					FN_ON			= false;
+					CmplxON			= false;
+					AlgebraRestrict = false;
+					Open_parenthesis = 0;
+				}
+				else
+				{
+					stream << " ";
+				}
 				FactorialON = false;
 				DotInserted = false;
 				OpInserted = false;
@@ -711,6 +729,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						{
 
 						}
+						/*
 						else if (stk.top()->getNum().find("!") != string::npos)
 						{
 							string tmp = stk.top()->getNum();
@@ -722,6 +741,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 							Value = stk.top();
 							stk.pop();
 						}
+						 */
 						else
 						{
 							Value = stk.top();
@@ -819,7 +839,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					}// end of if		( is Ops)
 					else
 					{
-						// creating Value
+						//// creating Value
 						if (tkn == "") break;
 						if (tkn.find(".") != string::npos)
 						{
@@ -837,6 +857,15 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 							stk.push(term->Pwr(Integer(power)));
 							*/
 						}
+						else if (tkn.find(")!") != string::npos)
+						{
+							tkn.erase(0, 1);
+							tkn.pop_back();
+							tkn.pop_back();
+							Integer *tmp = new Integer(tkn);
+							Integer::Factorial(*tmp);
+							stk.push(tmp);
+						}
 						else
 						{
 							stk.push(new Integer(tkn));
@@ -853,12 +882,6 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			}//end of while
 			
 			
-			//char type = '\0';
-			
-			//long double result(0);
-			//Integer i;
-			//NumberBase *result = &i;
-			
 			result = stk.top();
 			stream.str("");
 
@@ -874,12 +897,12 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				size_t len = result->getNum().length();
 				string tmp = result->getNum();
 				
-				if (len >= 305)
+				if (len >= 300)
 				{
-					len = 305;
-					tmp.erase(tmp.begin() + 305, tmp.end());
+					len = 300;
+					tmp.erase(tmp.begin() + 300, tmp.end());
 				}
-				for (size_t i = 1, delimiter = 60; i <= (len / 60); i++, delimiter++)
+				for (size_t i = 1, delimiter = 60; i <= (len / 60) && i < 5; i++, delimiter++)
 				{
 					tmp.insert(delimiter, 1, '\n');
 					delimiter += 60;

@@ -1,6 +1,7 @@
 #include "Integer.h"
 #include "UndefinedEx.h"
 #include "Decimal.h"
+#include <cmath>
 
 
 Integer::Integer() //: num("0"), type('i'), sign('\0') {};
@@ -73,10 +74,24 @@ NumberBase& Integer::Pwr(const NumberBase &p)
 void Integer::Factorial(Integer &b)
 {
 	Integer tmp = b;
-	for (Integer i = b - 2; i >= 2; i = i - 2)
+	if ((b.num.back() - '0') % 2)
 	{
-		tmp = tmp + i;
-		b = b * tmp;
+		int original = atoi(b.num.c_str());
+		for (Integer i = b - 2; i >= 3; i = i - 2)
+		{
+			tmp = tmp + i;
+			b = b * tmp;
+		}
+		original = round(original / 2.);
+		b = b * original;
+	}
+	else
+	{
+		for (Integer i = b - 2; i >= 2; i = i - 2)
+		{
+			tmp = tmp + i;
+			b = b * tmp;
+		}
 	}
 	
 }
@@ -85,15 +100,6 @@ void Integer::Factorial(Integer &b)
 
 Integer& operator +(const Integer&a, const Integer &b)
 {
-	/*
-	long  x, y;
-	x = y = 1;
-	x = atol(a.num.c_str()) * a.sign;
-	y = atol(b.num.c_str()) * b.sign;
-	Integer *res = new Integer(x + y);
-	return *res;
-	 */
-	
 	Integer *res = NULL;
 	
 	if (a.sign == -1 && b.sign == 1)
@@ -185,14 +191,6 @@ Integer& operator +(const Integer&a, const Integer &b)
 
 Integer& operator -(const Integer &a, const Integer &b)
 {
-	/*
-	long  x, y;
-	x = y = 1;
-	x = atol(a.num.c_str()) * a.sign;
-	y = atol(b.num.c_str()) * b.sign;
-	Integer *res = new Integer(x - y);
-	return *res;
-	*/
 	Integer *res = NULL;
 	if ((a.sign == -1 && b.sign == 1) || (a.sign == 1 && b.sign == -1))
 	{// -x - y,	x - (-y)
@@ -290,15 +288,6 @@ Integer& operator -(const Integer &a, const Integer &b)
 
 Integer& operator *(const Integer &a, const Integer &b)
 {
-	/*
-	long  x, y;
-	x = y = 1;
-	x = atol(a.num.c_str()) * a.sign;
-	y = atol(b.num.c_str()) *b.sign;
-	Integer *res = new Integer(x * y);
-	return *res;
-	 */
-
 	Integer *res = NULL;
 	string n1 = "";
 	string n2 = "";
@@ -438,6 +427,7 @@ bool operator >(const Integer &a, const Integer &b)
 
 ostream& Integer::output(ostream &os) const
 {
+	//cout << ((sign < 0) ? "-" : "") << num;
 	os << ((sign < 0) ? "-" : "") << num;
 	return os;
 }
