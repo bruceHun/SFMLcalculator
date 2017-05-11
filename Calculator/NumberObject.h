@@ -46,9 +46,11 @@ public:
 		sign = n;
 	}
 	// Pure Virtual Functions
-	virtual NumberBase& Pwr(const NumberBase &p) = 0;
+	static NumberBase& Power(const NumberBase &b, int p);
 	virtual void operator= (const char*) = 0;
 	virtual ostream& output(ostream &os) const = 0;
+	virtual istream& input(istream &is) = 0;
+	
 	
 
 	// Friend Functions
@@ -61,28 +63,10 @@ public:
 		return b.output(os);
 	}
  
-	/*
-	friend NumberBase& operator +(const NumberBase &a, const NumberBase &b)
+	friend istream& operator >>(istream &is, NumberBase &b)
 	{
-		return a + b;
+		return b.input(is);
 	}
-	
-	friend NumberBase& operator -(const NumberBase &a, const NumberBase &b)
-	{
-		return a - b;
-	}
-	friend NumberBase& operator *(const NumberBase &a, const NumberBase &b)
-	{
-		return a * b;
-	}
-	friend NumberBase& operator /(const NumberBase &a, const NumberBase &b)
-	{
-		return a / b;
-	}
-	*/
-	//friend bool operator ==(const NumberBase &a, const NumberBase &b);
-	//friend bool operator >=(const NumberBase &a, const NumberBase &b);
-	//friend bool operator <=(const NumberBase &a, const NumberBase &b);
 
 #endif // !FRIEND_OPERATORS
 	

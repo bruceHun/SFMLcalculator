@@ -106,11 +106,13 @@ Decimal::~Decimal()
 	//do nothing
 };
 
-NumberBase& Decimal::Pwr(const NumberBase &p)
+void Decimal::Power(const NumberBase &b, int p)
 {
+	/*
 	Integer *pwr = (Integer*)(&p);
 	for (Integer i("2"); *pwr >= i; i = i + 1)  *this = (*this) * (*this);
-	return  *this;
+	 */
+	//return  *this;
 };
 /*
 NumberBase& Decimal::operator +(const NumberBase & b)
@@ -209,6 +211,14 @@ void Decimal::operator =(const char *str)
 	num = tmp.num;
 	type = tmp.type;
 	sign = tmp.sign;
+}
+
+istream& Decimal::input(istream &is)
+{
+	string input = "";
+	is >> input;
+	*this = Decimal(input);
+	return is;
 }
 
 ostream& Decimal::output(ostream &os) const

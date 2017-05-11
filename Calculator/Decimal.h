@@ -17,8 +17,8 @@ public:
 	Decimal(const string&);
 	Decimal(const Integer&);
 	~Decimal();
-
-	NumberBase& Pwr(const NumberBase &p);
+	
+	static void Power(const NumberBase &b, int p);
 	vector<short> FailureFunction(const string&);
 	//NumberBase& operator +(const NumberBase & b);
 	//NumberBase& operator -(const NumberBase & b);
@@ -28,6 +28,7 @@ public:
 	void operator =(const char*);
 	
 	ostream& output(ostream&)const;
+	istream& input(istream &is);
 
 	friend Decimal& operator +(const Decimal &a, const Decimal &b);
 	friend Decimal& operator -(const Decimal &a, const Decimal &b);

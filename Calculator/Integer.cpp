@@ -62,15 +62,19 @@ Integer::~Integer()
 }
 
 
-NumberBase& Integer::Pwr(const NumberBase &p)
+NumberBase& Integer::Power(const NumberBase &b, int p)
 {
+	/*
 	Integer *pwr = (Integer*)(&p);
 	Integer base = *this;
 	for (Integer i("2"); *pwr >= i; i = i + 1)  
 		*this = (*this) * base;
-	return  *this;
+	 */
+	Integer *pwr = (Integer*)(&b);
+	return  *pwr;
 }
 
+/*
 void Integer::Factorial(Integer &b)
 {
 	Integer tmp = b;
@@ -95,7 +99,50 @@ void Integer::Factorial(Integer &b)
 	}
 	
 }
+*/
+Integer& Integer::Factorial(Integer &in)
+{
+	int n = atoi(in.num.c_str());
+	Integer *res = new Integer;
+	if (n < 2)
+	{
+		res->num = "1";
+		return *res;
+	}
+	//Power(Factorial(ceil((double)n/2)), 2);
+	
+	return *res;
+	
+}
+Integer& Integer::PrimeSwing(Integer &n)
+{
+	return n;
+}
+Integer& Integer::Product(string list, size_t len)
+{
+	Integer *res = new Integer;
+	return *res;
+}
+/*
+Factorial(n)
+if n < 2 then return(1) end_if return(Factorial(⌊n/2⌋)2 PrimeSwing(n))
 
+PrimeSwing(n) count ← 0
+for prime in Primes(2...n) do q ← n; p ← 1
+repeat
+q ← ⌊q/prime⌋
+if q is odd then p ← p·prime end_if
+until q = 0
+if p > 1 then FactorList[count++] ← p end_if
+end_for
+index ← 0 return(Product(FactorList, count))
+
+Product(list, len)
+if len = 0 then return(1) end_if
+if len = 1 then return(list[index++]) end_if
+hlen ← ⌊len/2⌋
+return(Product(list, len − hlen) · Product(list, hlen))
+*/
 
 
 Integer& operator +(const Integer&a, const Integer &b)
@@ -212,7 +259,7 @@ Integer& operator -(const Integer &a, const Integer &b)
 		n2 = b.num;
 		if (a.sign == -1 && b.sign == -1) sign = -1;
 	}
-	else if (lenA == lenB && a.num[0] >= b.num[0])
+	else if (lenA == lenB && a.num.compare(b.num) > 0)
 	{
 		n1 = a.num;
 		n2 = b.num;
@@ -425,9 +472,18 @@ bool operator >(const Integer &a, const Integer &b)
 	else return  (a.sign == 1) ? false : true;
 }
 
+istream& Integer::input(istream &is)
+{
+	string input = "";
+	is >> input;
+	*this = Integer(input);
+	return is;
+}
+
 ostream& Integer::output(ostream &os) const
 {
 	//cout << ((sign < 0) ? "-" : "") << num;
 	os << ((sign < 0) ? "-" : "") << num;
 	return os;
 }
+

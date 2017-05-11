@@ -10,6 +10,9 @@ class Decimal;
 
 class Integer : public NumberBase
 {
+private:
+	Integer& PrimeSwing(Integer &n);
+	Integer& Product(string list, size_t len);
 	
 public:
 	friend class Decimal;
@@ -20,8 +23,9 @@ public:
 	//Integer(NumberBase &b);
 	Integer(const string&);
 	~Integer();
-	NumberBase& Pwr(const NumberBase &b);
-	static void Factorial(Integer&);
+	static NumberBase& Power(const NumberBase &b, int p);
+	static Integer& Factorial(Integer&);
+	
 	//NumberBase& operator +(const NumberBase & b);
 	//NumberBase& operator -(const NumberBase & b) ;
 	//NumberBase& operator *(const NumberBase & b) ;
@@ -33,7 +37,8 @@ public:
 	void operator= (const char*);
 	
 	ostream& output(ostream &os) const;
-
+	istream& input(istream &is);
+	
 	friend Integer& operator +(const Integer &a, const Integer &b);
 	friend Integer& operator -(const Integer &a, const Integer &b);
 	friend Integer& operator *(const Integer &a, const Integer &b);
