@@ -24,6 +24,7 @@ public:
 	//NumberBase& operator -(const NumberBase & b);
 	//NumberBase& operator *(const NumberBase & b);
 	//NumberBase& operator /(const NumberBase & b);
+	static string Divide(const Decimal&, int);
 	
 	void operator =(const char*);
 	

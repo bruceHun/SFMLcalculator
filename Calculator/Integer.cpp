@@ -1,7 +1,7 @@
 #include "Integer.h"
-#include "UndefinedEx.h"
 #include "Decimal.h"
 #include <cmath>
+#include <stdexcept>
 
 
 Integer::Integer() //: num("0"), type('i'), sign('\0') {};
@@ -62,16 +62,22 @@ Integer::~Integer()
 }
 
 
-NumberBase& Integer::Power(const NumberBase &b, int p)
+Integer& Power(const Integer &b, int p)
 {
-	/*
-	Integer *pwr = (Integer*)(&p);
-	Integer base = *this;
-	for (Integer i("2"); *pwr >= i; i = i + 1)  
-		*this = (*this) * base;
-	 */
-	Integer *pwr = (Integer*)(&b);
-	return  *pwr;
+	
+	Integer base = *(Integer*)(&b);
+	Integer *result = new Integer(1);
+	
+	while(p > 0)
+	{
+		if(p % 2 == 1)
+		{ // Can also use (power & 1) to make code even faster
+			*result = (*result * base);// % MOD;
+		}
+		base = (base * base);// % MOD;
+		p = p / 2; // Can also use power >>= 1; to make code even faster
+	}
+	return *result;
 }
 
 /*
@@ -100,29 +106,7 @@ void Integer::Factorial(Integer &b)
 	
 }
 */
-Integer& Integer::Factorial(Integer &in)
-{
-	int n = atoi(in.num.c_str());
-	Integer *res = new Integer;
-	if (n < 2)
-	{
-		res->num = "1";
-		return *res;
-	}
-	//Power(Factorial(ceil((double)n/2)), 2);
-	
-	return *res;
-	
-}
-Integer& Integer::PrimeSwing(Integer &n)
-{
-	return n;
-}
-Integer& Integer::Product(string list, size_t len)
-{
-	Integer *res = new Integer;
-	return *res;
-}
+
 /*
 Factorial(n)
 if n < 2 then return(1) end_if return(Factorial(⌊n/2⌋)2 PrimeSwing(n))
@@ -259,7 +243,7 @@ Integer& operator -(const Integer &a, const Integer &b)
 		n2 = b.num;
 		if (a.sign == -1 && b.sign == -1) sign = -1;
 	}
-	else if (lenA == lenB && a.num.compare(b.num) > 0)
+	else if (lenA == lenB && a.num.compare(b.num) >= 0)
 	{
 		n1 = a.num;
 		n2 = b.num;
@@ -275,7 +259,7 @@ Integer& operator -(const Integer &a, const Integer &b)
 
 
 
-	/////////////// SUBSTRACT /////////////////
+	/////////////// SUBTRACT /////////////////
 	max = (int)n1.length();
 	min = (int)n2.length();
 	// ex. {'1','2','4'} + {'7'}
@@ -422,9 +406,10 @@ Integer& operator *(const Integer &a, const Integer &b)
 
 Decimal& operator /(const Integer &a, const Integer &b)
 {// Integer division converts two Integer operands into a Decimal
+	if (b.num == "0")
+		throw invalid_argument("Denominator cannot be 0");
 	Decimal n(a);
 	Decimal d(b);
-	
 	return n / d;
 };
 

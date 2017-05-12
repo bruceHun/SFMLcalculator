@@ -17,6 +17,7 @@ enum Operator {
 	SUBTRACT = '-',
 	MULTIPLY = '*',
 	DIVIDE = '/',
+	POW = '^',
 	NONE = 0xFF
 };
 

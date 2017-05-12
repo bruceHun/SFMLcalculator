@@ -6,6 +6,7 @@
 #include <sstream> //Needed for std::ostringstream
 #include <cmath>
 #include <queue>
+#include <stdexcept>
 using std::cout;
 
 sf::Font font;
@@ -511,19 +512,23 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 		}
 	case POWER:
 		{
-		if (!stream.str().empty() && (stream.str().back() >= '0' && stream.str().back() <= '9'))
-			{// power mark must have digits on both sides
-				if (!PowerON)
-				{
-					stream << '^';
-					PowerON		= true;
-					DotInserted = true; // no dot insertion is allowed
-				}
-				else
-				{
-					stream << ' ';
-					PowerON		= false;
-					DotInserted = false; // unlock dot insertion
+			if (!stream.str().empty())
+			{
+				char in = stream.str().back();
+				if ((in >= ZERO && in <= NINE) || (in >= UA && in <= UC))
+				{// power mark must have digits or algebras on both sides
+					if (!PowerON)
+					{
+						stream << " ^ ";
+						PowerON		= true;
+						DotInserted = true; // no dot insertion is allowed
+					}
+					else
+					{
+						stream << ' ';
+						PowerON		= false;
+						DotInserted = false; // unlock dot insertion
+					}
 				}
 			}
 			break;
@@ -709,7 +714,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 
 				while (1)
 				{
-					if (tkn == "+" || tkn == "-" || tkn == "*" || tkn == "/")
+					if (tkn == "+" || tkn == "-" || tkn == "*" || tkn == "/" || tkn == "^")
 					{
 						if (Value) { delete Value; Value = NULL; }
 						if (PrecValue) { delete PrecValue; PrecValue = NULL; }
@@ -815,22 +820,33 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 							break;
 						}
 						case DIVIDE:
-							if (Value->getNum() == "0") {
-								(PrecValue->getNum() == "0") ? stream << "Undetermined" : stream << "Impossible";
-								///stream = (PrecValue == 0) ? "Undetermined" : "Impossible";
+							try {
+								
+									if (PrecValue->getType() == 'i' && Value->getType() == 'd')
+										result = &(*(Integer*)PrecValue / *(Decimal*)Value);
+									else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
+										result = &(*(Decimal*)PrecValue / *(Integer*)Value);
+									else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
+										result = &(*(Integer*)PrecValue / *(Integer*)Value);
+									else if (PrecValue->getType() == 'd' && Value->getType() == 'd')
+										result = &(*(Decimal*)PrecValue / *(Decimal*)Value);
+									
+									
+								}catch (const invalid_argument &e)
+								{
+									cout << e.what();
+									string m = e.what();
+									result = new Integer(m);
+								}
 								break;
-							}
-							else
+								
+						case POW:
 							{
-								if (PrecValue->getType() == 'i' && Value->getType() == 'd')
-									result = &(*(Integer*)PrecValue / *(Decimal*)Value);
-								else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
-									result = &(*(Decimal*)PrecValue / *(Integer*)Value);
+								int p = atoi(Value->getNum().c_str());
+								if (PrecValue->getType() == 'd' && Value->getType() == 'i')
+									result = &(Power(*(Integer*)PrecValue, p));
 								else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
-									result = &(*(Integer*)PrecValue / *(Integer*)Value);
-								else if (PrecValue->getType() == 'd' && Value->getType() == 'd')
-									result = &(*(Decimal*)PrecValue / *(Decimal*)Value);
-								break;
+									result = &(Power(*(Integer*)PrecValue, p));
 							}
 
 						default: break;
@@ -849,21 +865,23 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						{
 
 						}
+						/*
 						else if (tkn.find("^") != string::npos)
-						{/*
-							string power = tkn.substr(tkn.find("^") +1);
+						{
+							int power = atoi(tkn.substr(tkn.find("^") + 1).c_str());
 							Integer *term = new Integer(tkn.substr(0, tkn.find("^")));
-							term->Pwr()
-							stk.push(term->Pwr(Integer(power)));
-							*/
+							*term = Power(*term, power);
+							stk.push(term);
+							
 						}
+						 */
 						else if (tkn.find(")!") != string::npos)
 						{
 							tkn.erase(0, 1);
 							tkn.pop_back();
 							tkn.pop_back();
 							Integer *tmp = new Integer(tkn);
-							Integer::Factorial(*tmp);
+							//Integer::Factorial(*tmp);
 							stk.push(tmp);
 						}
 						else
@@ -890,12 +908,13 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				SignString.setString("");
 			}
 			else { //Show regular result
-				//if (*result >= 0) SignString.setString("+");
-				//else SignString.setString("-");
-
-				//stream << fabs(result); //Absolute value
+				
 				size_t len = result->getNum().length();
 				string tmp = result->getNum();
+				
+				// console display
+				cout << ((result->getSign() > 0)? "" : "-") << tmp << endl;
+				cout << *(Decimal*)result << endl;
 				
 				if (len >= 300)
 				{
@@ -947,7 +966,6 @@ string Calculator::lineParser(const string &line)
 	int prn = 0;
 	bool first = true;
 	bool last = false;
-
 	// remove '\n'
 	while (infix.find("\n") != string::npos) infix.erase(infix.find("\n"), 1);
 	// insert algebra
@@ -966,6 +984,8 @@ string Calculator::lineParser(const string &line)
 		infix.erase(pos, 1);
 		infix.insert(pos, C);
 	}
+	
+
 	
 	while (!last)
 	{
@@ -1017,9 +1037,9 @@ string Calculator::lineParser(const string &line)
 				}
 				
 			}
-			else if (tkn == "*" || tkn == "/")
+			else if (tkn == "*" || tkn == "/" || tkn == "^")
 			{// '*' , '/'
-				if (!stack.empty() && (stack.back() == '*' || stack.back() == '/'))
+				if (!stack.empty() && (stack.back() == '*' || stack.back() == '/' || stack.back() == '^'))
 				{
 					postfix = postfix + " ";
 					postfix.push_back(stack.back());

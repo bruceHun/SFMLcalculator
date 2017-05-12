@@ -11,6 +11,7 @@ Decimal::Decimal()
 
 Decimal::Decimal(const Integer &n, const Integer &d)
 {
+	if (d.getNum() == "0") throw invalid_argument("Denominator cannot be 0");
 	if ((n.sign == 1 && d.sign == 1) || (n.sign == -1 && d.sign == -1))
 		sign = 1;
 	else sign = -1;
@@ -40,7 +41,7 @@ Decimal::Decimal(const char *str)
 	Integer numerator, denominator;
 	if (str[0] == '-')
 	{
-		num = arg.substr(1, arg.find(delimiter));
+		num = arg.substr(1, arg.find(delimiter) - 1);
 		sign = -1;
 	}
 	else
@@ -223,126 +224,75 @@ istream& Decimal::input(istream &is)
 
 ostream& Decimal::output(ostream &os) const
 {
-	string tmp = num;
+	string str = Divide(*this, 100);
+	if (sign < 0) str = "-" + str;
+	// word wrapper
+	for (size_t i = 1, delimiter = 60; i <= (str.length() / 60); i++, delimiter++)
+	{
+		str.insert(delimiter, 1, '\n');
+		delimiter += 60;
+	}
+	os << str;
+	return os;
+}
+
+string Decimal::Divide(const Decimal &n, int dp)
+{
+	string tmp = n.num;
 	string delimiter = "/";
 	string numerator = tmp.substr(0, tmp.find(delimiter));
 	string denominator = tmp.erase(0, tmp.find(delimiter) + delimiter.length());
-
-	Integer quotient("");
-	Integer dividend(numerator);
+	
+	string quotient("");
+	Integer dividend;
 	Integer divisor(denominator);
 	
-	size_t lenA = numerator.length() , lenB = denominator.length();
-
-	size_t decimal_place = 0, pos = 0;
+	size_t decimal_place = 0;
 	// icreases decimal_place every time an extra 0 is being appended
-	// pos stands for the position of the decimal point
-
-	if (denominator == "1")
+	dividend.num = ""; // clear the default '0'
+	dividend.num.push_back(numerator[0]); // push in the first digit of numerator
+	numerator.erase(0, 1); // erase it from numerator
+	while (decimal_place <= dp)
 	{
-		quotient = numerator;
-		os << ((sign < 0)?"-":"") << quotient;
-		return os;
-	}
-	
-	while (lenA < lenB)
-	{// not enough digits to begin with
-		if (!decimal_place) pos++;
-		quotient.num.push_back('0');
-		numerator.push_back('0');
-		++decimal_place;
-		++lenA;
-	}
-
-	while (decimal_place < 100)
-	{// long division to 100 decimal places
-		if (numerator == "")
-		{// no remainder
-			quotient.num.push_back('0');
-			++decimal_place;
-			continue;
-		}
-		else if (numerator[0] == '0')
-		{// remaining 0 from dividend exist when the previous division generates no remainder
-			if (numerator.length() == 1) { numerator = "";  continue; }
-			quotient.num.push_back('0');
-			numerator.erase(0, 1);
-			++pos;
-			--lenA;
-			continue;
-		}
-
-		while (1)
-		{// dividend finding loop
-			while (lenA < lenB)
-			{// not enough digits to be divide
-				numerator.push_back('0');
-				++decimal_place;
-				++lenA;
-			}
-
-			if (lenA > lenB)
-			{// ordinary situation
-				dividend = numerator.substr(0, lenB);
-				numerator.erase(0, lenB);
-				if (divisor > dividend)
-				{// add one more digit when divisor is bigger than dividend
-					dividend.num.push_back(numerator.front());
-					numerator.erase(0, 1);
-				}
-				lenA = numerator.length();
-				break;
-			}
-			else if (lenA == lenB)
-			{// same amount of digits
-				dividend = numerator;
-				numerator = ""; lenA = 0;
-				if (divisor > dividend)
-				{// add an extra 0 when divisor is bigger than dividend
-					dividend.num.push_back('0');
-					++decimal_place;
-				}
-				break;
-			}
-
-		}// end of while (dividend finding loop)
-
-		 /////////////////// DIVIDE ////////////////////
-		for (int i = 1; i <= 10; i++)
+		
+		if (dividend >= divisor)
 		{
-			if (dividend >= (divisor * i)) // fing the quotient
-				continue;
-			else
+			/////////////////// DIVIDE ////////////////////
+			for (int i = 1; i <= 10; i++)
 			{
-				dividend = dividend - (divisor * (i - 1)); // substraction
-				//if (dividend.num == "0") // no remainder
-					//dividend.num = "";
-					
-				numerator = dividend.num + numerator; // the number left to be divided
-			
-				lenA = numerator.length();
-				quotient.num.push_back(i - 1 + '0');
-				if (!decimal_place) pos++; // marking down the position of the decimal point
-				break;
-			}
+				if (dividend >= (divisor * i)) // finding the quotient
+					continue;
+				else
+				{
+					dividend = dividend - (divisor * (i - 1)); // subtraction
+					quotient.push_back(i - 1 + '0'); // pushing the result into quotient
+					break;
+				}
+			}/// end of DIVIDE
 		}
-	}// end of while (long division to 100 decimal places)
-
-	if (pos)
-		quotient.num.insert(pos, ".");
-	else
-		quotient.num.insert(0, "0.");
-	
-	// word wrapper
-	for (size_t i = 1, delimiter = 60; i <= (quotient.num.length() / 60); i++, delimiter++)
-	{
-		quotient.num.insert(delimiter, 1, '\n');
-		delimiter += 60;
+		else quotient.push_back('0'); // the dividend is not big enough to be divided
+		
+		if (dividend.num == "0") dividend.num = ""; // the last substraction leaves no remainder
+		
+		if (numerator == "") // no more digit left from the original numerator
+		{
+			if (!decimal_place) quotient.push_back('.'); // placeing decimal point if it hasn't been done
+			++decimal_place; // marking down current decimal place
+			if (dividend.num != "0") dividend.num.push_back('0'); // appending extra '0', allowing the division to proceed
+		}
+		else
+		{// appending next digit from numerator to dividend
+			dividend.num.push_back(numerator[0]);
+			numerator.erase(0, 1);
+		}
 	}
-
-	os << ((sign < 0)?"-":"") << quotient;
-	return os;
+	while (quotient[0] == '0' && quotient[1] != '.')
+	{// removing leading '0's
+		quotient.erase(0, 1);
+	}
+	return quotient;
 }
+
 
 
 vector<short> Decimal::FailureFunction(const string &p)

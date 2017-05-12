@@ -13,7 +13,7 @@ class Integer : public NumberBase
 private:
 	Integer& PrimeSwing(Integer &n);
 	Integer& Product(string list, size_t len);
-	
+	Integer& IntDivide(Integer &n) const;
 public:
 	friend class Decimal;
 	//friend class std::basic_ostream<char, std::char_traits<char>>;
@@ -23,8 +23,8 @@ public:
 	//Integer(NumberBase &b);
 	Integer(const string&);
 	~Integer();
-	static NumberBase& Power(const NumberBase &b, int p);
-	static Integer& Factorial(Integer&);
+	//static NumberBase& Power(const NumberBase &b, int p);
+	static Integer& Factorial(int);
 	
 	//NumberBase& operator +(const NumberBase & b);
 	//NumberBase& operator -(const NumberBase & b) ;
@@ -35,10 +35,11 @@ public:
 	//bool operator <=(const NumberBase &b);
 	
 	void operator= (const char*);
-	
+	Integer& operator %(Integer&);
 	ostream& output(ostream &os) const;
 	istream& input(istream &is);
 	
+	friend Integer& Power(const Integer&, int);
 	friend Integer& operator +(const Integer &a, const Integer &b);
 	friend Integer& operator -(const Integer &a, const Integer &b);
 	friend Integer& operator *(const Integer &a, const Integer &b);

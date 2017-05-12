@@ -46,7 +46,6 @@ public:
 		sign = n;
 	}
 	// Pure Virtual Functions
-	static NumberBase& Power(const NumberBase &b, int p);
 	virtual void operator= (const char*) = 0;
 	virtual ostream& output(ostream &os) const = 0;
 	virtual istream& input(istream &is) = 0;

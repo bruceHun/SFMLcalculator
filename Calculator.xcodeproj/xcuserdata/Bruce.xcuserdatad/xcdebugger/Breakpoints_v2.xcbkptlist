@@ -9,13 +9,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Calculator/Integer.cpp"
-            timestampString = "515573902.044765"
+            filePath = "Calculator/Calculator.cpp"
+            timestampString = "516247440.012187"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "65"
-            endingLineNumber = "65"
-            landmarkName = "Integer::Power(const NumberBase &amp;b, int p)"
+            startingLineNumber = "837"
+            endingLineNumber = "837"
+            landmarkName = "Calculator::InsertCharacter(ButtonCode bc)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
