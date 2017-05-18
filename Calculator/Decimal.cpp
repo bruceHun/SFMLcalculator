@@ -2,7 +2,7 @@
 #include <cmath>
 
 
-Decimal::Decimal() 
+Decimal::Decimal()
 {
 	num = "0/1";
 	type = 'd';
@@ -50,7 +50,7 @@ Decimal::Decimal(const char *str)
 		sign = 1;
 	}
 	tmp = arg.erase(0, arg.find(delimiter) + delimiter.length());
-
+	
 	////Repeating decimal converting
 	int Plen = 0, pos_a = 0;
 	vector<short> f;
@@ -102,7 +102,7 @@ Decimal::Decimal(const Integer& n)
 	sign = n.sign;
 };
 
-Decimal::~Decimal() 
+Decimal::~Decimal()
 {
 	//do nothing
 };
@@ -110,14 +110,14 @@ Decimal::~Decimal()
 void Decimal::Power(const NumberBase &b, int p)
 {
 	/*
-	Integer *pwr = (Integer*)(&p);
-	for (Integer i("2"); *pwr >= i; i = i + 1)  *this = (*this) * (*this);
+	 Integer *pwr = (Integer*)(&p);
+	 for (Integer i("2"); *pwr >= i; i = i + 1)  *this = (*this) * (*this);
 	 */
 	//return  *this;
 };
 /*
-NumberBase& Decimal::operator +(const NumberBase & b)
-{
+ NumberBase& Decimal::operator +(const NumberBase & b)
+ {
 	
 	string delimiter = "/";
 	string aug = num; //augend
@@ -132,8 +132,8 @@ NumberBase& Decimal::operator +(const NumberBase & b)
 	
 	Decimal *res = new Decimal((x1*y2) + (y1*x2), x2 * y2);
 	return *res;
-	 
-};
+ 
+ };
  */
 //NumberBase& Decimal::operator -(const NumberBase & b) {};
 //NumberBase& Decimal::operator *(const NumberBase & b) {};
@@ -144,22 +144,22 @@ Decimal& operator +(const Decimal &a, const Decimal &b)
 	string delimiter = "/";
 	string aug = a.num; //augend
 	string add = b.num; //addend
-
+	
 	long  x1, x2, y1, y2;
 	x1 = x2 = y1 = y2 = 1;
 	x1 = atol(aug.substr(0, aug.find(delimiter)).c_str()) * a.sign;
 	x2 = atoi(aug.erase(0, aug.find(delimiter) + delimiter.length()).c_str());
 	y1 = atoi(add.substr(0, add.find(delimiter)).c_str()) * b.sign;
 	y2 = atoi(add.erase(0, add.find(delimiter) + delimiter.length()).c_str());
-
+	
 	Decimal *res = new Decimal((x1*y2) + (y1*x2), x2 * y2);
 	return *res;
 }
 
-Decimal& operator -(const Decimal &a, const Decimal &b) 
+Decimal& operator -(const Decimal &a, const Decimal &b)
 {
 	string delimiter = "/";
-	string sub = a.num; //subtrahend		
+	string sub = a.num; //subtrahend
 	string min = b.num; //minuend
 	long  x1, x2, y1, y2;
 	x1 = x2 = y1 = y2 = 1;
@@ -167,7 +167,7 @@ Decimal& operator -(const Decimal &a, const Decimal &b)
 	x2 = atoi(sub.erase(0, sub.find(delimiter) + delimiter.length()).c_str());
 	y1 = atoi(min.substr(0, min.find(delimiter)).c_str()) * b.sign;
 	y2 = atoi(min.erase(0, min.find(delimiter) + delimiter.length()).c_str());
-
+	
 	Decimal *res = new Decimal((x1*y2) - (y1*x2), x2 * y2);
 	return *res;
 };
@@ -175,7 +175,7 @@ Decimal& operator -(const Decimal &a, const Decimal &b)
 Decimal& operator *(const Decimal &a, const Decimal &b)
 {
 	string delimiter = "/";
-	string mpc = a.num; //Multiplicand	
+	string mpc = a.num; //Multiplicand
 	string mpr = b.num; //Multiplier
 	long  x1, x2, y1, y2;
 	x1 = x2 = y1 = y2 = 1;
@@ -183,7 +183,7 @@ Decimal& operator *(const Decimal &a, const Decimal &b)
 	x2 = atoi(mpc.erase(0, mpc.find(delimiter) + delimiter.length()).c_str());
 	y1 = atoi(mpr.substr(0, mpr.find(delimiter)).c_str()) * b.sign;
 	y2 = atoi(mpr.erase(0, mpr.find(delimiter) + delimiter.length()).c_str());
-
+	
 	Decimal *res = new Decimal(x1 * y1, x2 * y2);
 	return *res;
 };
@@ -199,7 +199,7 @@ Decimal& operator /(const Decimal &a, const Decimal &b)
 	x2 = dvd.erase(0, dvd.find(delimiter) + delimiter.length());
 	y1 = dvr.substr(0, dvr.find(delimiter));
 	y2 = dvr.erase(0, dvr.find(delimiter) + delimiter.length());
-
+	
 	Decimal *res = new Decimal(x1 * y2, x2 * y1);
 	res->sign = ((a.sign == 1 && b.sign == 1) || (a.sign == -1 && b.sign == -1))? 1 : -1;
 	return *res;
@@ -227,11 +227,13 @@ ostream& Decimal::output(ostream &os) const
 	string str = Divide(*this, 100);
 	if (sign < 0) str = "-" + str;
 	// word wrapper
-	for (size_t i = 1, delimiter = 60; i <= (str.length() / 60); i++, delimiter++)
-	{
+	/*
+	 for (size_t i = 1, delimiter = 60; i <= (str.length() / 60); i++, delimiter++)
+	 {
 		str.insert(delimiter, 1, '\n');
 		delimiter += 60;
-	}
+	 }
+	 */
 	os << str;
 	return os;
 }
@@ -254,7 +256,6 @@ string Decimal::Divide(const Decimal &n, int dp)
 	numerator.erase(0, 1); // erase it from numerator
 	while (decimal_place <= dp)
 	{
-		
 		if (dividend >= divisor)
 		{
 			/////////////////// DIVIDE ////////////////////
@@ -277,8 +278,9 @@ string Decimal::Divide(const Decimal &n, int dp)
 		if (numerator == "") // no more digit left from the original numerator
 		{
 			if (!decimal_place) quotient.push_back('.'); // placeing decimal point if it hasn't been done
+			if (dividend.num != "") dividend.num.push_back('0'); // appending extra '0', allowing the division to proceed
+			else { quotient.pop_back(); break; } // divided evenly
 			++decimal_place; // marking down current decimal place
-			if (dividend.num != "0") dividend.num.push_back('0'); // appending extra '0', allowing the division to proceed
 		}
 		else
 		{// appending next digit from numerator to dividend

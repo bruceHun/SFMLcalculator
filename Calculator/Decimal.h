@@ -35,6 +35,8 @@ public:
 	friend Decimal& operator -(const Decimal &a, const Decimal &b);
 	friend Decimal& operator *(const Decimal &a, const Decimal &b);
 	friend Decimal& operator /(const Decimal &a, const Decimal &b);
+	friend bool operator >=(const Decimal &a, const Decimal &b);
+	friend bool operator >(const Decimal &a, const Decimal &b);
 	
 };
 

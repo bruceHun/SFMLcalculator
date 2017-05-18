@@ -407,7 +407,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				{
 					if (!AlgebraRestrict)
 					{
-						if ((!stream.str().empty() && stream.str().back() >= ZERO && stream.str().back() <= NINE) || FactorialON)
+						if ((!stream.str().empty() && stream.str().back() >= ZERO && stream.str().back() <= NINE))
 							break; // algebra can not follow a ditgit or a factorial
 						AlgebraRestrict = true;
 					}
@@ -481,7 +481,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				stream << "()!";
 				FactorialON		= true;
 				DotInserted		= true; // no dot insertion is allowed
-				AlgebraRestrict = true;
+				//AlgebraRestrict = true;
 			}
 			else
 			{
@@ -497,12 +497,15 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					AlgebraON		= false;
 					FN_ON			= false;
 					CmplxON			= false;
-					AlgebraRestrict = false;
+					//AlgebraRestrict = false;
 					Open_parenthesis = 0;
 				}
 				else
 				{
-					stream << " ";
+					string f = stream.str();
+					stream.str("");
+					f.erase(f.find_last_of("("), 1); f.pop_back(); f.pop_back();
+					stream << f << " ! ";
 				}
 				FactorialON = false;
 				DotInserted = false;
@@ -714,9 +717,9 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 
 				while (1)
 				{
-					if (tkn == "+" || tkn == "-" || tkn == "*" || tkn == "/" || tkn == "^")
+					if (tkn == "+" || tkn == "-" || tkn == "*" || tkn == "/" || tkn == "^" || tkn == "!")
 					{
-						if (Value) { delete Value; Value = NULL; }
+						//if (Value) { delete Value; Value = NULL; }
 						if (PrecValue) { delete PrecValue; PrecValue = NULL; }
 						// creating Value
 						if (stk.empty()) 
@@ -753,7 +756,8 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 							stk.pop();
 						}
 						// creating PrecValue
-						if (stk.empty())
+						if (tkn == "!"); // do nothing
+						else if (stk.empty())
 						{
 							stream.str("");
 							stream << "Invalid Format";
@@ -847,6 +851,23 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 									result = &(Power(*(Integer*)PrecValue, p));
 								else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
 									result = &(Power(*(Integer*)PrecValue, p));
+								break;
+							}
+						
+						case FCT:
+							{
+								if (10000 >= *(Integer*)Value)
+								{
+									Integer::Factorial(*(Integer*)Value);
+								}
+								else
+								{
+									string a = "Sorry, It'll take forever";
+									Value->setNum(a);
+									last = true;
+								}
+								result = Value;
+								break;
 							}
 
 						default: break;
@@ -874,16 +895,18 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 							stk.push(term);
 							
 						}
-						 */
+						 
+						
 						else if (tkn.find(")!") != string::npos)
 						{
 							tkn.erase(0, 1);
 							tkn.pop_back();
 							tkn.pop_back();
 							Integer *tmp = new Integer(tkn);
-							//Integer::Factorial(*tmp);
+							Integer::Factorial(*tmp);
 							stk.push(tmp);
 						}
+						*/
 						else
 						{
 							stk.push(new Integer(tkn));
@@ -909,12 +932,21 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			}
 			else { //Show regular result
 				
-				size_t len = result->getNum().length();
-				string tmp = result->getNum();
-				
 				// console display
-				cout << ((result->getSign() > 0)? "" : "-") << tmp << endl;
+				cout << ((result->getSign() > 0)? "" : "-") << stream.str() << endl;
 				cout << *(Decimal*)result << endl;
+				
+				
+				switch (result->getType())
+				{
+				case 'i':		stream << *(Integer*)result; break;
+				case 'd':		stream << *(Decimal*)result; break;
+				case 'c':		break;
+				default:		break;
+				}
+				// word wrapping
+				size_t len = stream.str().length();
+				string tmp = stream.str();
 				
 				if (len >= 300)
 				{
@@ -926,17 +958,12 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					tmp.insert(delimiter, 1, '\n');
 					delimiter += 60;
 				}
-				result->setNum(tmp);			
-				switch (result->getType())
-				{
-				case 'i':		stream << *(Integer*)result; break;
-				case 'd':		stream << *(Decimal*)result; break;
-				case 'c':		break;
-				default:		break;
-				}
-				stk.pop();
+				stream.str("");
+				stream << tmp;
+				
+				while (!stk.empty()) { delete stk.top(); stk.pop(); } // clear stack
 			}
-			if (result) { delete result; result = NULL; }
+			//if (result) { delete result; result = NULL; }
 			DotInserted = false;
 			InsertedCharacters = 0;
 			IsFirstAlreadyReplaced = false;

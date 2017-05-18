@@ -24,7 +24,7 @@ public:
 	Integer(const string&);
 	~Integer();
 	//static NumberBase& Power(const NumberBase &b, int p);
-	static Integer& Factorial(int);
+	static void Factorial(Integer&);
 	
 	//NumberBase& operator +(const NumberBase & b);
 	//NumberBase& operator -(const NumberBase & b) ;

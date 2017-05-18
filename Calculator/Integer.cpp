@@ -80,7 +80,7 @@ Integer& Power(const Integer &b, int p)
 	return *result;
 }
 
-/*
+
 void Integer::Factorial(Integer &b)
 {
 	Integer tmp = b;
@@ -105,7 +105,7 @@ void Integer::Factorial(Integer &b)
 	}
 	
 }
-*/
+
 
 /*
 Factorial(n)

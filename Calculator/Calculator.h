@@ -18,6 +18,7 @@ enum Operator {
 	MULTIPLY = '*',
 	DIVIDE = '/',
 	POW = '^',
+	FCT = '!',
 	NONE = 0xFF
 };
 
