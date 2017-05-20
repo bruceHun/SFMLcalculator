@@ -4,13 +4,13 @@
 #include <stdexcept>
 
 
-Integer::Integer() //: num("0"), type('i'), sign('\0') {};
+Integer::Integer()
 {
 	num = "0";
 	type = 'i';
 	sign = 1;
 }
-Integer::Integer(long n) //: num(to_string(n)), type('i')
+Integer::Integer(long n)
 {
 	sign = ((n < 0) ? -1 : 1);
 	n *= sign;
@@ -19,7 +19,7 @@ Integer::Integer(long n) //: num(to_string(n)), type('i')
 	
 };
 
-Integer::Integer(int n) //: num(to_string(n)), type('i') {};
+Integer::Integer(int n)
 {
 	sign = ((n < 0) ? -1 : 1);
 	n *= sign;
@@ -80,6 +80,18 @@ Integer& Power(const Integer &b, int p)
 	return *result;
 }
 
+Decimal Integer::findSR(const Decimal &g, const Integer &n)
+{
+	Decimal guess = g;
+	Decimal r = n / guess;
+	string RATE = "0.01";
+	while(((guess + r)/2 - r) / ((guess + r)/ 2) > RATE)
+		{
+			r = n / guess;
+			guess = (guess + r) / 2;
+		}
+	return guess;
+}
 
 void Integer::Factorial(Integer &b)
 {

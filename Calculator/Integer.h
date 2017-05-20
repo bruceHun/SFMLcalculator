@@ -38,6 +38,7 @@ public:
 	Integer& operator %(Integer&);
 	ostream& output(ostream &os) const;
 	istream& input(istream &is);
+	Decimal findSR(const Decimal &guess, const Integer &n);
 	
 	friend Integer& Power(const Integer&, int);
 	friend Integer& operator +(const Integer &a, const Integer &b);
