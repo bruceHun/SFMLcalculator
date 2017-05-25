@@ -848,7 +848,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 							{
 								int p = atoi(Value->getNum().c_str());
 								if (PrecValue->getType() == 'd' && Value->getType() == 'i')
-									result = &(Power(*(Integer*)PrecValue, p));
+									result = &(Power(*(Decimal*)PrecValue, p));
 								else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
 									result = &(Power(*(Integer*)PrecValue, p));
 								break;

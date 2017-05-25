@@ -1,6 +1,47 @@
 #include "Decimal.h"
 #include <cmath>
 
+namespace
+{
+	
+	Integer EuclideanAlgorithm(Integer &lhs, Integer &rhs)
+	{
+		Integer a = lhs, b = rhs;
+		while( a > 0 && b > 0 )
+		{
+			if( a >= b )
+			{
+				a = a % b;
+			}
+			else if( b > a )
+			{
+				b = b % a;
+			}
+		}
+		if(a >= b)
+		{
+			return a;
+		}
+		else
+		{
+			return b;
+		}
+	}
+	
+	void ReductionOfFraction(Decimal &f)
+	{
+		string tmp = f.getNum();
+		string delimiter = "/";
+		Integer numerator = tmp.substr(0, tmp.find(delimiter));
+		Integer denominator = tmp.erase(0, tmp.find(delimiter) + delimiter.length());
+		Integer GCD = EuclideanAlgorithm(numerator, denominator);
+		numerator = IntDivide(numerator, GCD);
+		denominator = IntDivide(denominator, GCD);
+		tmp = numerator.getNum() + "/" + denominator.getNum();
+		f.setNum(tmp);
+	}
+	
+}
 
 Decimal::Decimal()
 {
@@ -17,6 +58,8 @@ Decimal::Decimal(const Integer &n, const Integer &d)
 	
 	num = n.num + "/" + d.num;
 	type = 'd';
+	
+	ReductionOfFraction(*this);
 }
 
 Decimal::Decimal(int n)
@@ -103,6 +146,8 @@ Decimal::Decimal(const char *str)
 		numerator = Integer(num) * denominator + numerator;
 		
 		num = numerator.num + "/" + denominator.num;
+		
+		if (denominator.num != "1") ReductionOfFraction(*this);
 	}
 }
 
@@ -125,14 +170,12 @@ Decimal::~Decimal()
 	//do nothing
 };
 
-void Decimal::Power(const NumberBase &b, int p)
+Decimal abs(const Decimal &a)
 {
-	/*
-	 Integer *pwr = (Integer*)(&p);
-	 for (Integer i("2"); *pwr >= i; i = i + 1)  *this = (*this) * (*this);
-	 */
-	//return  *this;
-};
+	Decimal tmp = a;
+	tmp.sign = 1;
+	return tmp;
+}
 
 Decimal& operator +(const Decimal &a, const Decimal &b)
 {
@@ -152,17 +195,20 @@ Decimal& operator +(const Decimal &a, const Decimal &b)
 		Decimal c = a, d = b;
 		c.sign = 1, d.sign = 1;
 		res = &(d - c);
+		ReductionOfFraction(*res);
 		return *res;
 	}
 	else if (a.sign == 1 && b.sign == -1) {
 		Decimal c = a, d = b;
 		c.sign = 1, d.sign = 1;
 		res = &(c - d);
+		ReductionOfFraction(*res);
 		return *res;
 	}
 	else {
 		res = new Decimal(x1 * y2 + x2 * y1, x2 * y2);
 		res->sign = a.sign;
+		ReductionOfFraction(*res);
 		return *res;
 	}
 }
@@ -186,6 +232,7 @@ Decimal& operator -(const Decimal &a, const Decimal &b)
 		c.sign = 1, d.sign = 1;
 		res = &(c + d);
 		res->sign = a.sign;
+		ReductionOfFraction(*res);
 		return *res;
 	}
 	else { // -x - (-y), x - y
@@ -197,7 +244,7 @@ Decimal& operator -(const Decimal &a, const Decimal &b)
 		else {
 			res->sign = a > b ? -1 : 1;
 		}
-		
+		ReductionOfFraction(*res);
 		return *res;
 	}
 };
@@ -216,6 +263,7 @@ Decimal& operator *(const Decimal &a, const Decimal &b)
 	
 	Decimal *res = new Decimal(x1 * y1, x2 * y2);
 	res->sign = ((a.sign == 1)&&(b.sign == 1)) || ((a.sign == -1)&&(b.sign == -1))? 1 : -1;
+	ReductionOfFraction(*res);
 	return *res;
 };
 
@@ -233,6 +281,7 @@ Decimal& operator /(const Decimal &a, const Decimal &b)
 	
 	Decimal *res = new Decimal(x1 * y2, x2 * y1);
 	res->sign = ((a.sign == 1)&&(b.sign == 1)) || ((a.sign == -1)&&(b.sign == -1))? 1 : -1;
+	ReductionOfFraction(*res);
 	return *res;
 };
 
@@ -243,6 +292,14 @@ void Decimal::operator =(const char *str)
 	num = tmp.num;
 	type = tmp.type;
 	sign = tmp.sign;
+}
+
+Decimal Decimal::operator -()
+{
+	Decimal tmp = *this;
+	if (sign == 1) tmp.setSign(-1);
+	else tmp.setSign(1);
+	return tmp;
 }
 
 bool operator >(const Decimal &a, const Decimal &b)
@@ -271,20 +328,89 @@ bool operator >=(const Decimal &a, const Decimal &b)
 {
 	if (a.sign == 1 && b.sign == -1) return true;
 	else if (a.sign == -1 && b.sign == 1) return false;
-	else if (a.num.length() == b.num.length())
+	else
 	{
-		int ans = a.num.compare(b.num);
-		if		(ans == 0) return false;	// >
-		else if (ans > 0) 	return (a.sign == 1) ? true : false ;
-		else return  (a.sign == 1) ? false : true;
+		string delimiter = "/";
+		string dvd = a.num; //
+		string dvr = b.num; //
+		Integer  x1, x2, y1, y2;
+		
+		x1 = dvd.substr(0, dvd.find(delimiter));
+		x2 = dvd.erase(0, dvd.find(delimiter) + delimiter.length());
+		y1 = dvr.substr(0, dvr.find(delimiter));
+		y2 = dvr.erase(0, dvr.find(delimiter) + delimiter.length());
+		
+		Integer c = x1 * y2, d = x2 * y1;
+		
+		return c >= d ? true : false;
 	}
-	else if (a.num.length() > b.num.length())
-	{
-		return  (a.sign == 1) ? true : false;
-	}
-	else return  (a.sign == 1) ? false : true;
 }
 
+Decimal& Power(const Decimal &b, double power)
+{
+	int p = power;
+	string delimiter = "/";
+	string d = b.getNum();
+	Integer  x1, x2, res1("1"), res2("1");
+	int pwr = p;
+	x1 = d.substr(0, d.find(delimiter));
+	x2 = d.erase(0, d.find(delimiter) + delimiter.length());
+	
+	while(p > 0)
+	{
+		if(p % 2 == 1)
+		{ // Can also use (power & 1) to make code even faster
+			res1 = (res1 * x1);
+			res2 = (res2 * x2);
+		}
+		x1 = (x1 * x1);// % MOD;
+		x2 = (x2 * x2);
+		p = p / 2; // Can also use power >>= 1; to make code even faster
+		
+	}
+	
+	Decimal *result = new Decimal(res1, res2);
+	
+	if (b.getSign() == -1 && pwr % 2 == 1)
+		result->setSign(-1);
+	else
+		result->setSign(1);
+	
+	return *result;
+}
+
+bool operator <(const Decimal &a, const Decimal &b)
+{
+	if (a >= b) return false;
+	else return true;
+}
+
+bool operator <=(const Decimal &a, const Decimal &b)
+{
+	if (a > b) return false;
+	else return true;
+}
+
+bool operator ==(const Decimal &a, const Decimal &b)
+{
+	if (a.sign != b.sign) return false;
+	else
+	{
+		string delimiter = "/";
+		string dvd = a.num; //
+		string dvr = b.num; //
+		Integer  x1, x2, y1, y2;
+		
+		x1 = dvd.substr(0, dvd.find(delimiter));
+		x2 = dvd.erase(0, dvd.find(delimiter) + delimiter.length());
+		y1 = dvr.substr(0, dvr.find(delimiter));
+		y2 = dvr.erase(0, dvr.find(delimiter) + delimiter.length());
+		
+		Integer c = x1 * y2, d = x2 * y1;
+		
+		return c == d ? true : false;
+	}
+}
 
 istream& Decimal::input(istream &is)
 {
@@ -310,7 +436,7 @@ ostream& Decimal::output(ostream &os) const
 	return os;
 }
 
-string Decimal::Divide(const Decimal &n, int dp) //
+string Decimal::Divide(const Decimal &n, int dp) // 
 {
 	string tmp = n.num;
 	string delimiter = "/";

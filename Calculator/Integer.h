@@ -34,22 +34,31 @@ public:
 	//bool operator >=(const NumberBase &b);
 	//bool operator <=(const NumberBase &b);
 	
-	void operator= (const char*);
-	Integer& operator %(Integer&);
+	Decimal findSR(const Integer &guess, const Integer &n);
+	
 	ostream& output(ostream &os) const;
 	istream& input(istream &is);
-	Decimal findSR(const Decimal &guess, const Integer &n);
 	
+	void operator= (const char*);
+	Integer operator ++();
+	Integer operator ++(int);
+	
+	friend Integer& IntDivide(const Integer &a, const Integer &b);
 	friend Integer& Power(const Integer&, int);
 	friend Integer& operator +(const Integer &a, const Integer &b);
 	friend Integer& operator -(const Integer &a, const Integer &b);
 	friend Integer& operator *(const Integer &a, const Integer &b);
 	friend Decimal& operator /(const Integer &a, const Integer &b);
-	//friend Integer& operator /(const Integer &a, const Integer &b);
+	
+	friend Integer& operator %(const Integer &a, const Integer &b);
+ 
 	friend bool operator >=(const Integer &a, const Integer &b);
 	friend bool operator >(const Integer &a, const Integer &b);
+	friend bool operator <(const Integer &a, const Integer &b);
+	friend bool operator ==(const Integer &a, const Integer &b);
 	//friend bool operator ==(const Integer &a, const Integer &b);
 	//friend bool operator <=(const Integer &a, const Integer &b);
+	
 
 };
 
