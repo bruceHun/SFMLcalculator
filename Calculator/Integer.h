@@ -16,25 +16,14 @@ private:
 	Integer& IntDivide(Integer &n) const;
 public:
 	friend class Decimal;
-	//friend class std::basic_ostream<char, std::char_traits<char>>;
+	
 	Integer();
 	Integer(long ld);
 	Integer(int n);
-	//Integer(NumberBase &b);
 	Integer(const string&);
 	~Integer();
-	//static NumberBase& Power(const NumberBase &b, int p);
+	
 	static void Factorial(Integer&);
-	
-	//NumberBase& operator +(const NumberBase & b);
-	//NumberBase& operator -(const NumberBase & b) ;
-	//NumberBase& operator *(const NumberBase & b) ;
-	//NumberBase& operator /(const NumberBase & b) ;
-	//bool operator == (const NumberBase &b);
-	//bool operator >=(const NumberBase &b);
-	//bool operator <=(const NumberBase &b);
-	
-	Decimal findSR(const Integer &guess, const Integer &n);
 	
 	ostream& output(ostream &os) const;
 	istream& input(istream &is);
@@ -45,6 +34,7 @@ public:
 	
 	friend Integer& IntDivide(const Integer &a, const Integer &b);
 	friend Integer& Power(const Integer&, int);
+	friend Decimal& Power(const Integer&, double);
 	friend Integer& operator +(const Integer &a, const Integer &b);
 	friend Integer& operator -(const Integer &a, const Integer &b);
 	friend Integer& operator *(const Integer &a, const Integer &b);
@@ -55,9 +45,8 @@ public:
 	friend bool operator >=(const Integer &a, const Integer &b);
 	friend bool operator >(const Integer &a, const Integer &b);
 	friend bool operator <(const Integer &a, const Integer &b);
+	friend bool operator <=(const Integer &a, const Integer &b);
 	friend bool operator ==(const Integer &a, const Integer &b);
-	//friend bool operator ==(const Integer &a, const Integer &b);
-	//friend bool operator <=(const Integer &a, const Integer &b);
 	
 
 };

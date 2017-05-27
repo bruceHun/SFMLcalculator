@@ -5,204 +5,7 @@
 
 
 namespace  {
-	Decimal SIGN(const Decimal &tol,const Decimal &xm)
-	{
-		Decimal tmp = tol;
-		tmp.setSign(xm.getSign());
-		return tmp;
-	}
 	
-	//template <class T>
-	Decimal zbrent(const Decimal x1, const Decimal x2, const Decimal tol)
-	// Using Brent’s method, return the root of a function or functor func known to lie between x1
-	// and x2. The root will be refined until its accuracy is tol.
-	{
-		const Integer ITMAX=100; // Maximum allowed number of iterations.
-		const Decimal EPS; //=numeric_limits<Doub>::epsilon();
-		// Machine floating-point precision.
-		Decimal a=x1,b=x2,c=x2,d,e,fa=a,fb=b,fc,p,q,r,s,tol1,xm;
-		if ((fa > "0.0" && fb > "0.0") || (fa < "0.0" && fb < "0.0"))
-			throw("Root must be bracketed in zbrent");
-		fc=fb;
-		for (Integer iter=0;iter<ITMAX;iter++) {
-			if ((fb > "0.0" && fc > "0.0") || (fb < "0.0" && fc < "0.0")) {
-				c=a; // Rename a, b, c and adjust bounding interval
-				fc=fa; //d.
-				e=d=b-a;
-			}
-			if (abs(fc) < abs(fb)) {
-				a=b;
-				b=c;
-				c=a;
-				fa=fb;
-				fb=fc;
-				fc=fa;
-			}
-			tol1=2.0*100*abs(b)+0.5*tol; // Convergence check.
-			xm=0.5*(c-b);
-			if (abs(xm) <= tol1 || fb == "0.0") return b;
-			if (abs(e) >= tol1 && abs(fa) > abs(fb)) {
-				s=fb/fa; // Attempt inverse quadratic interpolation.
-				if (a == c) {
-					p=2.0*xm*s;
-					q=1.0-s;
-				} else {
-					q=fa/fc;
-					r=fb/fc;
-					p=s*(2.0*xm*q*(q-r)-(b-a)*(r-1.0));
-					q=(q-1.0)*(r-1.0)*(s-1.0);
-				}
-				if (p > 0.0) q = -q; // Check whether in bounds.
-				p=abs(p);
-				Decimal min1=3.0*xm*q-abs(tol1*q);
-				Decimal min2=abs(e*q);
-				if (2.0*p < (min1 < min2 ? min1 : min2)) {
-					e=d; // Accept interpolation.
-					d=p/q;
-				} else {
-					d=xm; // Interpolation failed, use bisection.
-					e=d;
-				}
-			} else { // Bounds decreasing too slowly, use bisection.
-				d=xm;
-				e=d;
-			}
-			a=b; // Move last best guess to a.
-			fa=fb;
-			if (abs(d) > tol1) // Evaluate new trial root.
-				b = b + d;
-			else
-				b = b + SIGN(tol1,xm);
-			fb=b;
-		}
-		throw("Maximum number of iterations exceeded in zbrent");
-	}
-	
-	
-	const Decimal EPSILON = "0.00000000000000000000000000000000000000000000000000000000001";
-	
-	Decimal babylonianSquareRoot(Decimal x, int maxIterations)
-	{
-		// don't allow negative numbers ....
-		if (x < 0) return 0;
-		
-		int i = 1; // set iteration count to 1
-		
-		// for first estimate y1 ... take
-		
-		Decimal y1 = x / 2;
-		
-		// for next estimate y2 ... take
-		
-		Decimal y2 = (y1 + x / y1) / 2;
-		
-		// now repeat until difference (y1-y2)/y2 -> a very small number
-		
-		while( abs(y1 / y2 - 1) > EPSILON )
-		{
-			// update estimates ...
-			
-			y1 = y2;
-			
-			y2 = (y1 + x / y1) / 2;
-			
-			++i;
-			
-			if(i >= maxIterations) break;
-			
-		}
-		
-		cout << "Number of iterations is " << i << " ";
-		
-		return y2;
-		
-	}
-	
-	Decimal halleySquareRoot(Integer n)
-	{
-		
-		Decimal s, s1, temp;
-		
-		int i = 1;
-		
-		s = Power(n,3);
-		
-		s = 1 / s;
-		
-		temp = n * s * s;
-
-		s1 = s *(15 - temp *(10 - 3 * temp) ) / 8;
-		
-		while( abs (temp - 1) > EPSILON * 10 )
-			
-		{
-			
-			s = s1;
-			
-			temp = n * s * s;
-			
-			s1 = s * (15 - temp * (10 - 3 * temp) ) /8;
-			
-			++i;
-			
-		}
-		
-		return 1 / s1;
-	}
-
-	/*
-	Decimal halleySquareRoot(Decimal x)
-	{
-		
-		// Solve for y in ... x*(y*y) = 1  ==>  sqrt(x) = 1/y
-		
-		// don't allow negative numbers ....
-		
-		if (x < 0) return 0;
-		
-		int i = 1; // set iteration count to 1
-		
-		// for first estimate, y1 ... take
-		
-		Decimal y1 = babylonianSquareRoot(x,3);
-		
-		// but want here ... 1/y1
-		
-		// cout << y1;
-		
-		y1 = 1 / y1;
-		
-		// for next estimate, y2 ... take
-		
-		Decimal temp = x * y1 * y1;
-		
-		Decimal y2 = y1 * (15 - temp * (10 - 3 * temp)) / 8;
-		
-		
-		
-		// now repeat until temp -> 1
-		
-		while(abs(temp - "1.0") > EPSILON * 10) // minimum allowed on my PC
-		{
-			
-			// update estimates ...
-			
-			y1 = y2;
-			
-			temp = x * y1 * y1;
-			
-			y2 = y1 * (15 - temp * (10 - 3 * temp)) / 8;
-			
-			++i;
-			
-		}
-		
-		cout << "+ " << i << " ";
-		
-		return 1 / y2;
-		
-	}
-	 */
 
 }
 
@@ -266,8 +69,8 @@ Integer::~Integer()
 
 Integer& Power(const Integer &b, int p)
 {
-	Integer base = *(Integer*)(&b);
-	Integer *result = new Integer(1);
+	Integer base = b; //*(Integer*)(&b);
+	Integer *result(new Integer(1));
 	
 	while(p > 0)
 	{
@@ -281,22 +84,71 @@ Integer& Power(const Integer &b, int p)
 	return *result;
 }
 
-Decimal Integer::findSR(const Integer &g, const Integer &n)
+Decimal& Power(const Integer &b, double p)
 {
+	string base = b.num;
+	string quotient("");
+	Integer dividend, divisor;
+	size_t decimal_place = 0;
+	// icreases decimal_place every time an extra 0 is being appended
+	divisor.num = "";
+	dividend.num = ""; // clear the default '0'
 	
-	//return halleySquareRoot(g);
-	return babylonianSquareRoot(g, 1000);
-	/*
-	Decimal guess = g;
-	Decimal r = n / guess;
-	string RATE = "0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001";
-	while(((guess + r)/2 - r) / ((guess + r)/ 2) > RATE)
+	
+	///--------- 直式開方法 ----------///
+	// (a + b)^2 = a^2 + 2ab + b^2
+	// (a + b)^2 - a^2 = 2ab + b^2
+	// (a + b)^2 - a^2 = b(2a + b)
+	int a = 0;
+	dividend.num.push_back(base[0]); // push in the first digit of base
+	base.erase(0, 1); // erase it from numerator
+	if ((b.num.length() % 2) == 0)
+	{// if the number of digits of the base is even, the first partition will have two digits
+		dividend.num.push_back(base[0]);
+		base.erase(0, 1);
+	}
+	
+	while (decimal_place <= 101)
+	{
+		/////////////////// DIVIDE ////////////////////
+		for (a = 1; a <= 10; a++)
 		{
-			r = n / guess;
-			guess = (guess + r) / 2;
+			divisor.num.push_back(a + '0');
+			if (dividend >= (divisor * a)) // finding the quotient
+			{ divisor.num.pop_back(); continue; }
+			else
+			{
+				divisor.num.pop_back(); divisor.num.push_back(--a + '0'); // back to previous 'a'
+				dividend = dividend - (divisor * a); // subtraction
+				quotient.push_back(a + '0'); // pushing the result into quotient
+				break;
+			}
+		}/// end of DIVIDE
+		
+		
+		if (dividend.num == "0") dividend.num = ""; // the last substraction leaves no remainder
+		
+		if (base == "") // no more digit left from the original base
+		{
+			if (!decimal_place) quotient.push_back('.'); // placeing decimal point if it hasn't been done
+			if (dividend.num != "") dividend.num = dividend.num + "00"; // appending extra two '0's, allowing the division to proceed
+			//else { quotient.pop_back(); break; } // divided evenly
+			//decimal_place = decimal_place + 2; // marking down current decimal place
+			++decimal_place;
 		}
-	return guess;
-	*/
+		else
+		{// appending next two digit from numerator to dividend
+			dividend.num.push_back(base[0]);
+			dividend.num.push_back(base[1]);
+			base.erase(0, 2);
+		}
+		
+		divisor = divisor + a;
+	}
+	
+	
+	Decimal *res = new Decimal(quotient);
+	return *res;
 }
 
 void Integer::Factorial(Integer &b)
@@ -679,6 +531,12 @@ bool operator >(const Integer &a, const Integer &b)
 bool operator <(const Integer &a, const Integer &b)
 {
 	if (a >= b) return false;
+	else return true;
+}
+
+bool operator <=(const Integer &a, const Integer &b)
+{
+	if (a > b) return false;
 	else return true;
 }
 

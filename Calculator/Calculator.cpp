@@ -24,10 +24,12 @@ Calculator::Calculator() :
 	InsertedCharacters(0),
 	stream(""),
 	sign(POSITIVE),
+	CmplxParts(REAL),
 	IsFirstAlreadyReplaced(false),
 	ResultOutputted(false),
 	FactorialON(false),
 	PowerON(false),
+	SqrtON(false),
 	FN_ON(false),
 	CmplxON(false),
 	AlgebraRestrict(false),
@@ -127,7 +129,7 @@ Calculator::Calculator() :
 		case 8: button_text = "C"; break;
 		case 9: button_text = ""; break;
 		case 10: button_text = ""; break;
-		case 11: button_text = "!"; break;
+		case 11: button_text = "i"; break;
 		default: break;
 		}
 		FnButtons.back().second = sf::Text(button_text, font, 30);
@@ -314,6 +316,12 @@ void Calculator::Start() {
 				else
 					FnButtons.at(i).first.setFillColor(sf::Color(242, 242, 242));
 				break;
+			case 1:
+				if (SqrtON)
+					FnButtons.at(i).first.setFillColor(sf::Color(224, 20, 20));
+				else
+					FnButtons.at(i).first.setFillColor(sf::Color(242, 242, 242));
+				break;
 			case 3:
 				if (FN_ON)
 					FnButtons.at(i).first.setFillColor(sf::Color(224, 20, 20));
@@ -323,6 +331,17 @@ void Calculator::Start() {
 			case 4:
 				if (PowerON)
 					FnButtons.at(i).first.setFillColor(sf::Color(224, 20, 20));
+				else
+					FnButtons.at(i).first.setFillColor(sf::Color(242, 242, 242));
+				break;
+			case 11:
+				if (CmplxON)
+				{
+					if (CmplxParts == REAL)
+						FnButtons.at(i).first.setFillColor(sf::Color(224, 20, 20));
+					else  if (CmplxParts == IMAG)
+						FnButtons.at(i).first.setFillColor(sf::Color(350, 20, 20));
+				}
 				else
 					FnButtons.at(i).first.setFillColor(sf::Color(242, 242, 242));
 				break;
@@ -371,20 +390,29 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 	
 	case PLUS:
 	case MINUS:
-	case  PER:
+	case PER:
 	case SOLIDUS:
 		{
 		if (!ResultOutputted) {
 			if (Op == NONE || IsFirstAlreadyReplaced) {
 				
-				
-				if (CmplxON) { // n! function is on
+				if (CmplxON) { // Complex mode  is on
 					if (bc != PER && bc != SOLIDUS && bc != LEFT_PRN && bc != RIGHT_PRN)
 					{
 						string line = stream.str();
-						line.pop_back(); line.pop_back();
-						stream.str("");
-						stream << line << (char)bc << "!]";
+						if	(CmplxParts == REAL)
+						{
+							line.pop_back(); line.pop_back();
+							stream.str("");
+							stream << line << (char)bc << "+i";
+						}
+						else if (CmplxParts == IMAG)
+						{
+							line.pop_back();
+							stream.str("");
+							stream << line << (char)bc << "i";
+						}
+					
 					}
 					break;
 				}
@@ -395,12 +423,23 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					}
 					break;
 				}
+				else if (SqrtON) { // sqrt function is on
+					if (bc != PER && bc != SOLIDUS && bc != LEFT_PRN && bc != RIGHT_PRN)
+					{
+						string line = stream.str();
+						line.pop_back(); line.pop_back();
+						stream.str("");
+						stream << line << (char)bc << " ]";
+					}
+					break;
+				}
 				else if (FN_ON && !AlgebraON && (bc == 'A' || bc == 'B' || bc == 'C'))
 				{// Algebra defining mode
 					stream.str("");
-					stream << (char)bc << "= ";
+					stream << (char)bc << "=                                                          ";
 					FN_ON = false;
 					AlgebraON = true;
+					InsertedCharacters += 60;
 					break;
 				}
 				if ((bc >= UA && bc <= UC))
@@ -476,12 +515,16 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 		{
 			if (!FactorialON)
 			{
-				char last = stream.str().back();
-				if ((last >= ZERO && last <= NINE) || (last >= UA && last <=UC)) break;
+				if (!stream.str().empty())
+				{
+					char last = stream.str().back();
+					if ((last >= ZERO && last <= NINE) || (last >= UA && last <= UC)) break;
+				}
 				stream << "()!";
 				FactorialON		= true;
 				DotInserted		= true; // no dot insertion is allowed
 				//AlgebraRestrict = true;
+				InsertedCharacters += 3;
 			}
 			else
 			{
@@ -505,11 +548,13 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					string f = stream.str();
 					stream.str("");
 					f.erase(f.find_last_of("("), 1); f.pop_back(); f.pop_back();
-					stream << f << " ! ";
+					if (f == "") stream.str("");
+					else stream << f << " ! ";
 				}
 				FactorialON = false;
 				DotInserted = false;
 				OpInserted = false;
+				AlgebraRestrict = true;
 			}
 			break;
 		}
@@ -531,6 +576,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						stream << ' ';
 						PowerON		= false;
 						DotInserted = false; // unlock dot insertion
+						AlgebraRestrict = true;
 					}
 				}
 			}
@@ -550,51 +596,91 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 		{
 			if (!CmplxON)
 			{
-				//stream.str("");
-				stream << "[!]";
+				CmplxParts = REAL;
+				stream << "+i";
 				CmplxON		= true;
-				//DotInserted = true; // no dot insertion is allowed
+				AlgebraRestrict = true;
+				InsertedCharacters += 2;
 			}
-			else
+			else if (CmplxParts == REAL)
 			{
-				CmplxON		= false;
-				//DotInserted = false;
+				CmplxParts = IMAG;
+				sign = POSITIVE;
+				DotInserted = false;
+			}
+			else if (CmplxParts == IMAG)
+			{
+				stream << " ";
+				CmplxParts = REAL;
+				CmplxON = false;
 			}
 			break;
 		}
 			
 			
 	case SQRT:
+	{
+		if (!SqrtON)
 		{
-		if (PrecValue) { delete PrecValue; PrecValue = NULL; }
-		if (Value) { delete Value; Value = NULL; }
-		DotInserted = false;
-		InsertedCharacters = 0;
-		IsFirstAlreadyReplaced = false;
-		sign = POSITIVE;
-		SignString.setString("");
-		stream.str("");
-		stream.str("Working On it");
-		ResultOutputted = false;
-			FactorialON = false;
-		break;
+			if (!stream.str().empty())
+			{
+				char last = stream.str().back();
+				if ((last >= ZERO && last <= NINE) || (last >= UA && last <= UC)) break;
+			}
+			stream << "sqrt[  ]";
+			SqrtON = true;
+			AlgebraRestrict = true;
+			InsertedCharacters += 6;
 		}
+		else
+		{
+			string base = stream.str().substr(stream.str().find_last_of("sqrt["));
+			base.erase(0, 1);
+			base.pop_back();
+			
+			if (base == "") stream.str("");
+			else stream << " ";
+			
+			SqrtON = false;
+			OpInserted = false;
+		}
+		break;
+	};
+	
 	case SWAP_SIGN: {
 		if (!ResultOutputted) {
 			string line = stream.str();
 			size_t pos = 0;
-			if (stream.str().find_last_of(" ") != string::npos) pos = stream.str().find_last_of(" ") + 1;
+			if (CmplxParts == IMAG)
+			{
+				if (sign == POSITIVE) {
+					sign = NEGATIVE;
+					pos = stream.str().find_last_of("+");
+					line.erase(pos, 1);
+					line.insert(pos, 1, '-');
+				}
+				else {
+					sign = POSITIVE;
+					pos = stream.str().find_last_of("-");
+					line.erase(pos, 1);
+					line.insert(pos, 1, '+');
+				}
+			}
+			else 
+			{
+				if (stream.str().find_last_of(" ") != string::npos) pos = stream.str().find_last_of(" ") + 1;
 
-					if (sign == POSITIVE) {
-						sign = NEGATIVE;
-						line.insert(pos, 1, '-');
-						++InsertedCharacters;
-					}
-					else {
-						sign = POSITIVE;
-						line.erase(pos, 1);
-						--InsertedCharacters;
-					}
+				if (sign == POSITIVE) {
+					sign = NEGATIVE;
+					line.insert(pos, 1, '-');
+					++InsertedCharacters;
+				}
+				else {
+					sign = POSITIVE;
+					line.erase(pos, 1);
+					--InsertedCharacters;
+				}
+			}
 			stream.str("");
 			stream << line;
 		}
@@ -606,7 +692,16 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			if (!DotInserted && InsertedCharacters>0 && InsertedCharacters<300) {
 				DotInserted = true;
 				++InsertedCharacters;
-				stream << '.';
+				if (CmplxON)
+				{
+					string tmp = stream.str();
+					if (CmplxParts == REAL)  tmp.insert(tmp.find_last_of("+"), 1, '.');
+					else if (CmplxParts == IMAG) tmp.insert(tmp.find_last_of("i"), 1, '.');
+					stream.str("");
+					stream << tmp;
+				}
+				else
+					stream << '.';
 			}
 		}
 	}
@@ -624,6 +719,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 		ResultOutputted = false;
 		FactorialON		= false;
 		PowerON			= false;
+		SqrtON			= false;
 		AlgebraON		= false;
 		FN_ON			= false;
 		CmplxON			= false;
@@ -643,6 +739,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			ResultOutputted = true;
 			FactorialON = false;
 			PowerON = false;
+			SqrtON = false;
 			AlgebraON = false;
 			FN_ON = false;
 			CmplxON = false;
@@ -652,14 +749,37 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			
 			break;
 		}
+		
+		string line = stream.str();
+		char AG = '\0';
+		
 		if (AlgebraON)
 		{
 			if (stream.str() == "") stream << '0';
-			string line = stream.str();
-			line.erase(0, 3);
+			AG = stream.str().front();
+			line.erase(0, 60); // erase "X= "
+			//InsertedCharacters -= 60;
+			size_t p;
+			while ((p = line.find("\n")) != string::npos)
+			{
+				line.erase(p, 1);
+			}
 			line = "( " + line + " )";
 			bool fully_expand = false;
-			size_t pos1(0), pos2(0), pos3(0);
+			size_t pos(0), pos1(0), pos2(0), pos3(0);
+			cout << line << endl;
+			/*
+			while ((pos = line.find("sqrt(", pos)) != string::npos)
+			{
+				cout << "sqrt( found" << endl;
+				pos += 4;
+				line.erase(pos, 1);
+				line.insert(pos, "[ ");
+				line.erase(line.find(")", pos, 1), 1);
+				line.insert(line.find(")", pos, 1), "] ");
+				cout << line << endl;
+			}
+			 */
 			
 			while (!fully_expand)
 			{
@@ -668,14 +788,8 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				if ((pos3 = line.find("C")) != string::npos) { line.erase(pos3, 1); line.insert(pos3, C); }
 				if (pos1 == string::npos && pos2 == string::npos && pos3 == string::npos) fully_expand = true;
 			}
-			switch (stream.str().front())
-			{
-			case 'A':		A = line; break;
-			case 'B':		B = line; break;
-			case 'C':		C = line; break;
-			default:		break;
-			}
-					
+			
+			/*
 			DotInserted = false;
 			InsertedCharacters = 0;
 			IsFirstAlreadyReplaced = false;
@@ -683,6 +797,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			ResultOutputted = false;
 			FactorialON = false;
 			PowerON = false;
+			SqrtON = false;
 			AlgebraON = false;
 			FN_ON = false;
 			CmplxON = false;
@@ -691,11 +806,12 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			Op = NONE;
 			stream.str("");
 			break;
+			 */
 		}
 		
-		if (!ResultOutputted) {
+		if (!ResultOutputted || AlgebraON) {
 			
-			string pf = lineParser(stream.str());
+			string pf = lineParser(line);
 			string tkn;
 			stack<NumberBase*> stk;
 			size_t pos = 0;
@@ -717,7 +833,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 
 				while (1)
 				{
-					if (tkn == "+" || tkn == "-" || tkn == "*" || tkn == "/" || tkn == "^" || tkn == "!")
+					if (tkn == "+" || tkn == "-" || tkn == "*" || tkn == "/" || tkn == "^" || tkn == "!" || tkn == "sqrt")
 					{
 						//if (Value) { delete Value; Value = NULL; }
 						if (PrecValue) { delete PrecValue; PrecValue = NULL; }
@@ -728,49 +844,18 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 							stream << "Invalid Format";
 							return;
 						}
-						else if (stk.top()->getNum().find(".") != string::npos)
-						{
-							Value = stk.top();
-							stk.pop();
-						}
-						else if (stk.top()->getNum().find("+") != string::npos)
-						{
-
-						}
-						/*
-						else if (stk.top()->getNum().find("!") != string::npos)
-						{
-							string tmp = stk.top()->getNum();
-							tmp.erase(0, 1);
-							tmp.pop_back();
-							tmp.pop_back();
-							stk.top()->setNum(tmp);
-							Integer::Factorial(*(Integer*)stk.top());
-							Value = stk.top();
-							stk.pop();
-						}
-						 */
 						else
 						{
 							Value = stk.top();
 							stk.pop();
 						}
 						// creating PrecValue
-						if (tkn == "!"); // do nothing
+						if (tkn == "!" || tkn == "sqrt"); // do nothing
 						else if (stk.empty())
 						{
 							stream.str("");
 							stream << "Invalid Format";
 							return;
-						}
-						else if (stk.top()->getNum().find(".") != string::npos)
-						{
-							PrecValue = stk.top();
-							stk.pop();
-						}
-						else if (stk.top()->getNum().find("+") != string::npos)
-						{
-
 						}
 						else
 						{
@@ -789,68 +874,118 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						switch (Op) {
 						case ADD:
 						{
-							if (PrecValue->getType() == 'i' && Value->getType() == 'd')
-								result = &(*(Integer*)PrecValue	 + *(Decimal*)Value);
+							if		(PrecValue->getType() == 'i' && Value->getType() == 'i')
+								result = &(*(Integer*)PrecValue + *(Integer*)Value);
+							else if (PrecValue->getType() == 'i' && Value->getType() == 'd')
+								result = &(*(Integer*)PrecValue + *(Decimal*)Value);
+							else if (PrecValue->getType() == 'i' && Value->getType() == 'c')
+								result = &(*(Integer*)PrecValue + *(Complex*)Value);
 							else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
 								result = &(*(Decimal*)PrecValue + *(Integer*)Value);
-							else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
-								result = &(*(Integer*)PrecValue	 + *(Integer*)Value);
 							else if (PrecValue->getType() == 'd' && Value->getType() == 'd')
 								result = &(*(Decimal*)PrecValue + *(Decimal*)Value);
+							else if (PrecValue->getType() == 'd' && Value->getType() == 'c')
+								result = &(*(Decimal*)PrecValue + *(Complex*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'i')
+								result = &(*(Complex*)PrecValue + *(Integer*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'd')
+								result = &(*(Complex*)PrecValue + *(Decimal*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'c')
+								result = &(*(Complex*)PrecValue + *(Complex*)Value);
 							break;
 						}
 						case SUBTRACT:
 						{
-							if (PrecValue->getType() == 'i' && Value->getType() == 'd')
+							if		(PrecValue->getType() == 'i' && Value->getType() == 'i')
+								result = &(*(Integer*)PrecValue - *(Integer*)Value);
+							else if (PrecValue->getType() == 'i' && Value->getType() == 'd')
 								result = &(*(Integer*)PrecValue - *(Decimal*)Value);
+							else if (PrecValue->getType() == 'i' && Value->getType() == 'c')
+								result = &(*(Integer*)PrecValue - *(Complex*)Value);
 							else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
 								result = &(*(Decimal*)PrecValue - *(Integer*)Value);
-							else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
-								result = &(*(Integer*)PrecValue - *(Integer*)Value);
 							else if (PrecValue->getType() == 'd' && Value->getType() == 'd')
 								result = &(*(Decimal*)PrecValue - *(Decimal*)Value);
+							else if (PrecValue->getType() == 'd' && Value->getType() == 'c')
+								result = &(*(Decimal*)PrecValue - *(Complex*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'i')
+								result = &(*(Complex*)PrecValue - *(Integer*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'd')
+								result = &(*(Complex*)PrecValue - *(Decimal*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'c')
+								result = &(*(Complex*)PrecValue - *(Complex*)Value);
 							break;
 						}
 						case MULTIPLY:
 						{
-							if (PrecValue->getType() == 'i' && Value->getType() == 'd')
+							if		(PrecValue->getType() == 'i' && Value->getType() == 'i')
+								result = &(*(Integer*)PrecValue * *(Integer*)Value);
+							else if (PrecValue->getType() == 'i' && Value->getType() == 'd')
 								result = &(*(Integer*)PrecValue * *(Decimal*)Value);
+							else if (PrecValue->getType() == 'i' && Value->getType() == 'c')
+								result = &(*(Integer*)PrecValue * *(Complex*)Value);
 							else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
 								result = &(*(Decimal*)PrecValue * *(Integer*)Value);
-							else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
-								result = &(*(Integer*)PrecValue * *(Integer*)Value);
 							else if (PrecValue->getType() == 'd' && Value->getType() == 'd')
 								result = &(*(Decimal*)PrecValue * *(Decimal*)Value);
+							else if (PrecValue->getType() == 'd' && Value->getType() == 'c')
+								result = &(*(Decimal*)PrecValue * *(Complex*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'i')
+								result = &(*(Complex*)PrecValue * *(Integer*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'd')
+								result = &(*(Complex*)PrecValue * *(Decimal*)Value);
+							else if (PrecValue->getType() == 'c' && Value->getType() == 'c')
+								result = &(*(Complex*)PrecValue * *(Complex*)Value);
 							break;
 						}
 						case DIVIDE:
 							try {
-								
-									if (PrecValue->getType() == 'i' && Value->getType() == 'd')
+									if		(PrecValue->getType() == 'i' && Value->getType() == 'i')
+										result = &(*(Integer*)PrecValue / *(Integer*)Value);
+									else if (PrecValue->getType() == 'i' && Value->getType() == 'd')
 										result = &(*(Integer*)PrecValue / *(Decimal*)Value);
+									else if (PrecValue->getType() == 'i' && Value->getType() == 'c')
+										result = &(*(Integer*)PrecValue / *(Complex*)Value);
 									else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
 										result = &(*(Decimal*)PrecValue / *(Integer*)Value);
-									else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
-										result = &(*(Integer*)PrecValue / *(Integer*)Value);
 									else if (PrecValue->getType() == 'd' && Value->getType() == 'd')
 										result = &(*(Decimal*)PrecValue / *(Decimal*)Value);
-									
-									
-								}catch (const invalid_argument &e)
-								{
-									cout << e.what();
-									string m = e.what();
-									result = new Integer(m);
+									else if (PrecValue->getType() == 'd' && Value->getType() == 'c')
+										result = &(*(Decimal*)PrecValue / *(Complex*)Value);
+									else if (PrecValue->getType() == 'c' && Value->getType() == 'i')
+										result = &(*(Complex*)PrecValue / *(Integer*)Value);
+									else if (PrecValue->getType() == 'c' && Value->getType() == 'd')
+										result = &(*(Complex*)PrecValue / *(Decimal*)Value);
+									else if (PrecValue->getType() == 'c' && Value->getType() == 'c')
+										result = &(*(Complex*)PrecValue / *(Complex*)Value);
 								}
+							catch (const invalid_argument &e)
+							{
+								cout << e.what();
+								string m = e.what();
+								result = new Integer(m);
+							}
 								break;
 								
 						case POW:
 							{
 								int p = atoi(Value->getNum().c_str());
-								if (PrecValue->getType() == 'd' && Value->getType() == 'i')
+								if		(PrecValue->getType() == 'i' && Value->getType() == 'i')
+									result = &Power(*(Integer*)PrecValue, p);
+								else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
 									result = &(Power(*(Decimal*)PrecValue, p));
-								else if (PrecValue->getType() == 'i' && Value->getType() == 'i')
-									result = &(Power(*(Integer*)PrecValue, p));
+								else if (PrecValue->getType() == 'c' && Value->getType() == 'i')
+									result = &Power(*(Complex*)PrecValue, p);
+								break;
+							}
+						case SQT:
+							{
+								if		(Value->getType() == 'i')
+									result = &Power(*(Integer*)Value, 0.5);
+								else if (Value->getType() == 'd')
+									result = &(Power(*(Decimal*)Value, 0.5));
+								else if (Value->getType() == 'c')
+									;
 								break;
 							}
 						
@@ -876,37 +1011,16 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					}// end of if		( is Ops)
 					else
 					{
-						//// creating Value
+						////// Creating corresponding objects //////
 						if (tkn == "") break;
-						if (tkn.find(".") != string::npos)
+						if (tkn.find("i") != string::npos)
+						{
+							stk.push(new Complex(tkn));
+						}
+						else if ((tkn.find(".") != string::npos) || (tkn.find("/") != string::npos))
 						{
 							stk.push(new Decimal(tkn));
 						}
-						else if (tkn.find("+") != string::npos)
-						{
-
-						}
-						/*
-						else if (tkn.find("^") != string::npos)
-						{
-							int power = atoi(tkn.substr(tkn.find("^") + 1).c_str());
-							Integer *term = new Integer(tkn.substr(0, tkn.find("^")));
-							*term = Power(*term, power);
-							stk.push(term);
-							
-						}
-						 
-						
-						else if (tkn.find(")!") != string::npos)
-						{
-							tkn.erase(0, 1);
-							tkn.pop_back();
-							tkn.pop_back();
-							Integer *tmp = new Integer(tkn);
-							Integer::Factorial(*tmp);
-							stk.push(tmp);
-						}
-						*/
 						else
 						{
 							stk.push(new Integer(tkn));
@@ -927,22 +1041,55 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			stream.str("");
 
 			/////////////////// A N S W E R /////////////////////
-			if (Op == DIVIDE && Value == 0) { //We don't have to show the sign
-				SignString.setString("");
-			}
-			else { //Show regular result
+	
 				
-				// console display
-				cout << ((result->getSign() > 0)? "" : "-") << stream.str() << endl;
-				cout << *(Decimal*)result << endl;
-				
-				
+			// console display
+			cout << "result->num : " << result->getNum() << endl;
+			cout << ((result->getSign() > 0)? "" : "-") << stream.str() << endl;
+			cout << "Full output : " << *result << endl;
+			
+			if (AlgebraON)
+			{
+				string tmp;
 				switch (result->getType())
 				{
-				case 'i':		stream << *(Integer*)result; break;
-				case 'd':		stream << *(Decimal*)result; break;
-				case 'c':		break;
-				default:		break;
+					case 'i':
+						tmp = result->getNum();
+						break;
+					case 'd':
+						tmp = result->getNum();
+						break;
+					case 'c':
+						tmp = result->getNum() + "i";
+						if (((Complex*)result)->getImagSign() == -1)
+						{
+							size_t plusSignPos = tmp.find("+");
+							tmp.erase(plusSignPos, 1);
+							tmp.insert(plusSignPos, "-");
+						}
+					default:
+						break;
+				}
+				if (result->getSign() == -1) tmp = "-" + tmp;
+				cout << "Algebra : " << tmp << endl;
+				switch (AG)
+				{
+					case 'A':		A = tmp; break;
+					case 'B':		B = tmp; break;
+					case 'C':		C = tmp; break;
+					default:		break;
+				}
+				stream.str("");
+				ResultOutputted = false;
+			}
+			else
+			{
+				switch (result->getType())
+				{
+					case 'i':		stream << *(Integer*)result; break;
+					case 'd':		stream << *(Decimal*)result; break;
+					case 'c':		stream << *(Complex*)result; break;
+					default:		break;
 				}
 				// word wrapping
 				size_t len = stream.str().length();
@@ -960,17 +1107,19 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				}
 				stream.str("");
 				stream << tmp;
-				
-				while (!stk.empty()) { delete stk.top(); stk.pop(); } // clear stack
+				ResultOutputted = true;
 			}
+			while (!stk.empty()) { delete stk.top(); stk.pop(); } // clear stack
+			
 			//if (result) { delete result; result = NULL; }
 			DotInserted = false;
 			InsertedCharacters = 0;
 			IsFirstAlreadyReplaced = false;
 			sign = POSITIVE;
-			ResultOutputted = true;
+			//ResultOutputted = true;
 			FactorialON = false;
 			PowerON = false;
+			SqrtON = false;
 			AlgebraON = false;
 			FN_ON = false;
 			CmplxON = false;
@@ -979,8 +1128,9 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			Op = NONE;
 		}
 				break;
-	default: break;
 	}
+	default: break;
+	
 	}
 
 }
@@ -1011,25 +1161,32 @@ string Calculator::lineParser(const string &line)
 		infix.erase(pos, 1);
 		infix.insert(pos, C);
 	}
-	
+	cout << "in lineParser " << infix << endl;
 
 	
 	while (!last)
 	{
 		if ((pos = infix.find(" ")) == string::npos)
 		{
+			// cout << "cannot find space" << endl;
 			tkn = infix; last = true;
 		}
 		else
 		{
 			tkn = infix.substr(0, pos);
 			infix.erase(0, pos + 1);
+			/* for testing
+			cout << "infix:		" << infix << endl;
+			cout << "token:		" << tkn << endl;
+			cout << "---------------------------" << endl;
+			cout << "postfix:	" << postfix << endl;
+			 */
 		}
 		while (1)
 		{
 			if	(tkn == "(")
 			{// '('
-				if (!stack.empty() && (stack.back() == '*' || stack.back() == '/' || stack.back() == '+' || stack.back() == '-' || stack.back() == '('))
+				if (!stack.empty() && (stack.back() == '*' || stack.back() == '/' || stack.back() == '+' || stack.back() == '-' || stack.back() == '(' || stack.back() == '['))
 				{
 					stack.push_back('(');
 					prn++;
@@ -1092,6 +1249,18 @@ string Calculator::lineParser(const string &line)
 					prn--;
 				}
 				else return "Invalid_Format";
+				break;
+			}
+			else if (tkn == "sqrt[")
+			{
+				stack.push_back('[');
+				break;
+			}
+			else if (tkn == "]")
+			{// ']'
+				stack.pop_back(); // pop '['
+				postfix = postfix + " sqrt";
+				cout << postfix << endl;
 				break;
 			}
 			else

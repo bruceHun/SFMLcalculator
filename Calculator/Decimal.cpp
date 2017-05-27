@@ -3,6 +3,7 @@
 
 namespace
 {
+	int LengthLimit = 50;
 	
 	Integer EuclideanAlgorithm(Integer &lhs, Integer &rhs)
 	{
@@ -59,7 +60,7 @@ Decimal::Decimal(const Integer &n, const Integer &d)
 	num = n.num + "/" + d.num;
 	type = 'd';
 	
-	ReductionOfFraction(*this);
+	//ReductionOfFraction(*this);
 }
 
 Decimal::Decimal(int n)
@@ -72,6 +73,13 @@ Decimal::Decimal(int n)
 	}
 	num = to_string(n) + "/1";
 	type = 'd';
+}
+
+Decimal::Decimal(double d)
+{
+	num = to_string(d);
+	*this = Decimal(num);
+	//ReductionOfFraction(*this);
 }
 
 Decimal::Decimal(const char *str)
@@ -91,7 +99,9 @@ Decimal::Decimal(const char *str)
 		else {
 			sign = 1;
 		}
-		num = arg + "/1";
+		if (arg.find("/") == string::npos)
+			num = arg + "/1";
+		else num = arg;
 	}
 	else
 	{
@@ -109,8 +119,9 @@ Decimal::Decimal(const char *str)
 		
 		
 		////Repeating decimal converting
-		if (tmp.length() >= 100)
+		if (0)//tmp.length() >= 120)
 		{// only when the input match or exceed the maximum digits of output do we have to varify if it is repeating
+			/*
 			int Plen = 0, pos_a = 0;
 			vector<short> f;
 			for (int i = 0; i < tmp.length(); i++)
@@ -133,6 +144,7 @@ Decimal::Decimal(const char *str)
 				for (int i = 0; i < tmp.length(); i++)
 					denominator.num.push_back((i < Plen)? '9': '0');
 			}
+			 */
 		////end of Repeating decimal converting
 		}
 		else
@@ -147,7 +159,7 @@ Decimal::Decimal(const char *str)
 		
 		num = numerator.num + "/" + denominator.num;
 		
-		if (denominator.num != "1") ReductionOfFraction(*this);
+		//if (denominator.num != "1") ReductionOfFraction(*this);
 	}
 }
 
@@ -167,6 +179,7 @@ Decimal::Decimal(const Integer& n)
 
 Decimal::~Decimal()
 {
+	//cout << "delete " << this << endl;
 	//do nothing
 };
 
@@ -195,20 +208,20 @@ Decimal& operator +(const Decimal &a, const Decimal &b)
 		Decimal c = a, d = b;
 		c.sign = 1, d.sign = 1;
 		res = &(d - c);
-		ReductionOfFraction(*res);
+		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
 		return *res;
 	}
 	else if (a.sign == 1 && b.sign == -1) {
 		Decimal c = a, d = b;
 		c.sign = 1, d.sign = 1;
 		res = &(c - d);
-		ReductionOfFraction(*res);
+		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
 		return *res;
 	}
 	else {
 		res = new Decimal(x1 * y2 + x2 * y1, x2 * y2);
 		res->sign = a.sign;
-		ReductionOfFraction(*res);
+		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
 		return *res;
 	}
 }
@@ -232,19 +245,19 @@ Decimal& operator -(const Decimal &a, const Decimal &b)
 		c.sign = 1, d.sign = 1;
 		res = &(c + d);
 		res->sign = a.sign;
-		ReductionOfFraction(*res);
+		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
 		return *res;
 	}
 	else { // -x - (-y), x - y
 		res = new Decimal(x1 * y2 - x2 * y1, x2 * y2);
 		
 		if (a.sign == 1 && b.sign == 1) {
-			res->sign = a > b ? 1 : -1;
+			res->sign = a >= b ? 1 : -1;
 		}
 		else {
 			res->sign = a > b ? -1 : 1;
 		}
-		ReductionOfFraction(*res);
+		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
 		return *res;
 	}
 };
@@ -263,7 +276,7 @@ Decimal& operator *(const Decimal &a, const Decimal &b)
 	
 	Decimal *res = new Decimal(x1 * y1, x2 * y2);
 	res->sign = ((a.sign == 1)&&(b.sign == 1)) || ((a.sign == -1)&&(b.sign == -1))? 1 : -1;
-	ReductionOfFraction(*res);
+	if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
 	return *res;
 };
 
@@ -281,7 +294,7 @@ Decimal& operator /(const Decimal &a, const Decimal &b)
 	
 	Decimal *res = new Decimal(x1 * y2, x2 * y1);
 	res->sign = ((a.sign == 1)&&(b.sign == 1)) || ((a.sign == -1)&&(b.sign == -1))? 1 : -1;
-	ReductionOfFraction(*res);
+	if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
 	return *res;
 };
 
@@ -352,30 +365,39 @@ Decimal& Power(const Decimal &b, double power)
 	string delimiter = "/";
 	string d = b.getNum();
 	Integer  x1, x2, res1("1"), res2("1");
+	Decimal dvd, dvr, *result;
 	int pwr = p;
 	x1 = d.substr(0, d.find(delimiter));
 	x2 = d.erase(0, d.find(delimiter) + delimiter.length());
 	
-	while(p > 0)
+	if (power == 0.5)
 	{
-		if(p % 2 == 1)
-		{ // Can also use (power & 1) to make code even faster
-			res1 = (res1 * x1);
-			res2 = (res2 * x2);
-		}
-		x1 = (x1 * x1);// % MOD;
-		x2 = (x2 * x2);
-		p = p / 2; // Can also use power >>= 1; to make code even faster
-		
+		dvd = Power(x1, power);
+		dvr = Power(x2, power);
+		result = &(dvd / dvr);
 	}
-	
-	Decimal *result = new Decimal(res1, res2);
-	
-	if (b.getSign() == -1 && pwr % 2 == 1)
-		result->setSign(-1);
 	else
-		result->setSign(1);
-	
+	{
+		while(p > 0)
+		{
+			if(p % 2 == 1)
+			{ // Can also use (power & 1) to make code even faster
+				res1 = (res1 * x1);
+				res2 = (res2 * x2);
+			}
+			x1 = (x1 * x1);// % MOD;
+			x2 = (x2 * x2);
+			p = p / 2; // Can also use power >>= 1; to make code even faster
+			
+		}
+		
+		result = new Decimal(res1, res2);
+		
+		if (b.getSign() == -1 && pwr % 2 == 1)
+			result->setSign(-1);
+		else
+			result->setSign(1);
+	}
 	return *result;
 }
 
@@ -454,22 +476,19 @@ string Decimal::Divide(const Decimal &n, int dp) //
 	numerator.erase(0, 1); // erase it from numerator
 	while (decimal_place <= dp)
 	{
-		if (dividend >= divisor)
+
+		/////////////////// DIVIDE ////////////////////
+		for (int i = 1; i <= 10; i++)
 		{
-			/////////////////// DIVIDE ////////////////////
-			for (int i = 1; i <= 10; i++)
+			if (dividend >= (divisor * i)) // finding the quotient
+				continue;
+			else
 			{
-				if (dividend >= (divisor * i)) // finding the quotient
-					continue;
-				else
-				{
-					dividend = dividend - (divisor * (i - 1)); // subtraction
-					quotient.push_back(i - 1 + '0'); // pushing the result into quotient
-					break;
-				}
-			}/// end of DIVIDE
-		}
-		else quotient.push_back('0'); // the dividend is not big enough to be divided
+				dividend = dividend - (divisor * --i); // subtraction
+				quotient.push_back(i + '0'); // pushing the result into quotient
+				break;
+			}
+		}/// end of DIVIDE
 		
 		if (dividend.num == "0") dividend.num = ""; // the last substraction leaves no remainder
 		

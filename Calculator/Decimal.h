@@ -13,6 +13,7 @@ public:
 	Decimal();
 	Decimal(const Integer&, const Integer&);
 	Decimal(int);
+	Decimal(double);
 	Decimal(const char*);
 	Decimal(const string&);
 	Decimal(const Integer&);

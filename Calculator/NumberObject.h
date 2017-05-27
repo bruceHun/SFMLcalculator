@@ -19,7 +19,10 @@ protected:
 	int sign;
 public:
 	NumberBase() {};
-	virtual ~NumberBase() {};
+	virtual ~NumberBase()
+	{
+		// cout << "delete " << this << endl;
+	};
 
 	string getNum() const
 	{

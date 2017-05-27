@@ -10,6 +10,7 @@
 #include "NumberObject.h"
 #include "Integer.h"
 #include "Decimal.h"
+#include "Complex.h"
 
 //What operation are we performing?
 enum Operator {
@@ -18,6 +19,7 @@ enum Operator {
 	MULTIPLY = '*',
 	DIVIDE = '/',
 	POW = '^',
+	SQT = 's',
 	FCT = '!',
 	NONE = 0xFF
 };
@@ -26,6 +28,11 @@ enum Operator {
 enum Sign {
 	POSITIVE = +1,
 	NEGATIVE = -1
+};
+
+enum Flag {
+	REAL,
+	IMAG
 };
 
 //Which button did the user click?
@@ -82,6 +89,7 @@ private:
 	bool OpInserted;
 	bool FactorialON;
 	bool PowerON;
+	bool SqrtON;
 	bool AlgebraON;
 	bool FN_ON;
 	bool CmplxON;
@@ -92,6 +100,7 @@ private:
 							   //Internal variables
 	std::ostringstream stream;
 	Sign sign;
+	Flag CmplxParts;
 	bool IsFirstAlreadyReplaced;
 	bool ResultOutputted;
 	int Open_parenthesis;
