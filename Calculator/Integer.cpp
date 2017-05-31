@@ -5,7 +5,16 @@
 
 
 namespace  {
-	
+	Integer pwrRecursive(Integer base, int exp)
+	{
+		Integer tmp;
+		if(exp < 0)  return Integer(0);
+		if(exp == 0) return Integer(1);
+		tmp = pwrRecursive(base, exp >> 1);
+		
+		if(exp & 1) return base * tmp * tmp;
+		else return tmp * tmp;
+	}
 
 }
 
@@ -69,23 +78,35 @@ Integer::~Integer()
 
 Integer& Power(const Integer &b, int p)
 {
-	Integer base = b; //*(Integer*)(&b);
+	/*
+	Integer *result = new Integer;
+	*result = b;
+	*result = pwrRecursive(*result, p);
+	return *result;
+	 */
+	if (p < 0) throw invalid_argument("Invalid input");
+	
+	Integer base = b; // *(Integer*)(&b);
 	Integer *result(new Integer(1));
 	
 	while(p > 0)
 	{
-		if(p % 2 == 1)
+		//if(p % 2 == 1)
+		if (p & 1)
 		{ // Can also use (power & 1) to make code even faster
 			*result = (*result * base);// % MOD;
 		}
 		base = (base * base);// % MOD;
-		p = p / 2; // Can also use power >>= 1; to make code even faster
+		//p = p / 2; // Can also use power >>= 1; to make code even faster
+		p >>= 1;
 	}
 	return *result;
+	
 }
 
 Decimal& Power(const Integer &b, double p)
 {
+	if (p != 0.5) throw invalid_argument("Invalid input");
 	string base = b.num;
 	string quotient("");
 	Integer dividend, divisor;
@@ -132,9 +153,8 @@ Decimal& Power(const Integer &b, double p)
 		{
 			if (!decimal_place) quotient.push_back('.'); // placeing decimal point if it hasn't been done
 			if (dividend.num != "") dividend.num = dividend.num + "00"; // appending extra two '0's, allowing the division to proceed
-			//else { quotient.pop_back(); break; } // divided evenly
-			//decimal_place = decimal_place + 2; // marking down current decimal place
-			++decimal_place;
+			//else  break;  // divided evenly
+			++decimal_place;  // marking down current decimal place
 		}
 		else
 		{// appending next two digit from numerator to dividend
@@ -478,7 +498,7 @@ Integer& operator *(const Integer &a, const Integer &b)
 Decimal& operator /(const Integer &a, const Integer &b)
 {// Integer division converts two Integer operands into a Decimal
 	if (b.num == "0")
-		throw invalid_argument("Denominator cannot be 0");
+		throw invalid_argument("Divisor cannot be 0");
 	Decimal n(a);
 	Decimal d(b);
 	return n / d;

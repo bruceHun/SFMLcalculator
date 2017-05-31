@@ -94,6 +94,8 @@ private:
 	bool FN_ON;
 	bool CmplxON;
 	bool AlgebraRestrict;
+	bool LeftParenthesis;
+	bool RightParenthesis;
 	
 	Operator Op; //Which operation do we have to perform?
 	size_t InsertedCharacters; //Characters (ciphers or dot) inserted

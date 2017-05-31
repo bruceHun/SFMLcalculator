@@ -33,6 +33,8 @@ Calculator::Calculator() :
 	FN_ON(false),
 	CmplxON(false),
 	AlgebraRestrict(false),
+	LeftParenthesis(false),
+	RightParenthesis(false),
 	Open_parenthesis(0)
 {
 	//Create the window
@@ -251,37 +253,51 @@ void Calculator::Start() {
 					///////////////// key binding /////////////////////
 			case sf::Event::KeyPressed: { //Input by keyborad
 				switch (Event.key.code) {
+				case sf::Keyboard::A:			InsertCharacter(UA); break;
+				case sf::Keyboard::B:			InsertCharacter(UB); break;
+				case sf::Keyboard::C:			InsertCharacter(UC); break;
+				case sf::Keyboard::F:			InsertCharacter(FN); break;
+				case sf::Keyboard::I:			InsertCharacter(COMPLEX); break;
+				case sf::Keyboard::N:			InsertCharacter(FACTORIAL); break;
+				case sf::Keyboard::P:			InsertCharacter(POWER); break;
+				case sf::Keyboard::R:			InsertCharacter(SQRT); break;
 				case sf::Keyboard::Num1: 
-				case sf::Keyboard::Numpad1:	InsertCharacter(ONE); break;
+				case sf::Keyboard::Numpad1:		InsertCharacter(ONE); break;
 				case sf::Keyboard::Num2: 
-				case sf::Keyboard::Numpad2:	InsertCharacter(TWO); break;
+				case sf::Keyboard::Numpad2:		InsertCharacter(TWO); break;
 				case sf::Keyboard::Num3: 
-				case sf::Keyboard::Numpad3:	InsertCharacter(THREE); break;
+				case sf::Keyboard::Numpad3:		InsertCharacter(THREE); break;
 				case sf::Keyboard::Num4: 
-				case sf::Keyboard::Numpad4:	InsertCharacter(FOUR); break;
+				case sf::Keyboard::Numpad4:		InsertCharacter(FOUR); break;
 				case sf::Keyboard::Num5: 
-				case sf::Keyboard::Numpad5:	InsertCharacter(FIVE); break;
+				case sf::Keyboard::Numpad5:		InsertCharacter(FIVE); break;
 				case sf::Keyboard::Num6: 
-				case sf::Keyboard::Numpad6:	InsertCharacter(SIX); break;
+				case sf::Keyboard::Numpad6:		InsertCharacter(SIX); break;
 				case sf::Keyboard::Num7: 
-				case sf::Keyboard::Numpad7:	InsertCharacter(SEVEN); break;
+				case sf::Keyboard::Numpad7:		InsertCharacter(SEVEN); break;
 				case sf::Keyboard::Num8: 
-				case sf::Keyboard::Numpad8:	InsertCharacter(EIGHT); break;
+				case sf::Keyboard::Numpad8:		InsertCharacter(EIGHT); break;
 				case sf::Keyboard::Num9: 
-				case sf::Keyboard::Numpad9:	InsertCharacter(NINE); break;
+				case sf::Keyboard::Numpad9:		InsertCharacter(NINE); break;
 				case sf::Keyboard::Num0: 
-				case sf::Keyboard::Numpad0:	InsertCharacter(ZERO); break;
+				case sf::Keyboard::Numpad0:		InsertCharacter(ZERO); break;
+				case sf::Keyboard::LShift:		InsertCharacter(SWAP_SIGN); break;
+				case sf::Keyboard::LBracket:	InsertCharacter(LEFT_PRN); break;
+				case sf::Keyboard::RBracket:	InsertCharacter(RIGHT_PRN); break;
 				case sf::Keyboard::Period:
 				case sf::Keyboard::Comma:		InsertCharacter(INSERT_DOT); break;
+				case sf::Keyboard::BackSpace:	InsertCharacter(CLEAR); break;
 				case sf::Keyboard::PageUp:
 				case sf::Keyboard::PageDown:
 				case sf::Keyboard::Home:
 				case sf::Keyboard::End:			InsertCharacter(SWAP_SIGN); break;
+				case sf::Keyboard::Equal:
 				case sf::Keyboard::Add:			InsertCharacter(PLUS); break;
+				case sf::Keyboard::Dash:
 				case sf::Keyboard::Subtract:	InsertCharacter(MINUS); break;
 				case sf::Keyboard::Multiply:	InsertCharacter(PER); break;
+				case sf::Keyboard::Slash:
 				case sf::Keyboard::Divide:		InsertCharacter(SOLIDUS); break;
-				case sf::Keyboard::Equal:
 				case sf::Keyboard::Return:		InsertCharacter(EQUAL); break;
 				default: break;
 				}
@@ -338,9 +354,15 @@ void Calculator::Start() {
 				if (CmplxON)
 				{
 					if (CmplxParts == REAL)
+					{
 						FnButtons.at(i).first.setFillColor(sf::Color(224, 20, 20));
+						FnButtons.at(i).second.setString("R");
+					}
 					else  if (CmplxParts == IMAG)
+					{
 						FnButtons.at(i).first.setFillColor(sf::Color(350, 20, 20));
+						FnButtons.at(i).second.setString("i");
+					}
 				}
 				else
 					FnButtons.at(i).first.setFillColor(sf::Color(242, 242, 242));
@@ -395,9 +417,41 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 		{
 		if (!ResultOutputted) {
 			if (Op == NONE || IsFirstAlreadyReplaced) {
+				char strback = '\0';
+				if (!stream.str().empty())  strback = stream.str().back();
+				bool isDigit(false), isAlgebra(false), isOpratr(false);
+				//if (OpInserted && (bc >= PLUS && bc <= SOLIDUS)) break;
+				if (bc == PLUS || bc == MINUS || bc == PER || bc == SOLIDUS) {
+					if (OpInserted) break;  // prevent concatenation of operators
+					isOpratr = true;
+				}
+				else if (bc >= ZERO	&& bc <= NINE) { isDigit = true; }
+				else if (bc >= UA	&& bc <= UC) { isAlgebra = true; }
+
+				if (FN_ON && !AlgebraON && isAlgebra)
+				{// Algebra defining mode
+					stream.str("");
+					stream << (char)bc << "=" << endl;
+					FN_ON = false;
+					AlgebraON = true;
+					//InsertedCharacters = 60;
+					break;
+				}
+
+				if (isAlgebra)
+				{
+					if (!AlgebraRestrict)
+					{
+						if (!stream.str().empty() && ((strback >= ZERO && strback <= NINE) || RightParenthesis))
+							break; // algebra can not follow a ditgit or a factorial
+						AlgebraRestrict = true;
+					}
+					else if (isDigit) break;
+					else break;
+				}
 				
 				if (CmplxON) { // Complex mode  is on
-					if (bc != PER && bc != SOLIDUS && bc != LEFT_PRN && bc != RIGHT_PRN)
+					if (bc != PER && bc != SOLIDUS && bc != LEFT_PRN && bc != RIGHT_PRN && !isAlgebra)
 					{
 						string line = stream.str();
 						if	(CmplxParts == REAL)
@@ -417,9 +471,11 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					break;
 				}
 				else if (PowerON) {	// pw function is on
-					if (bc != PLUS && bc != MINUS && bc != PER && bc != SOLIDUS && bc != LEFT_PRN && bc != RIGHT_PRN)
+					if (!isOpratr && bc != LEFT_PRN && bc != RIGHT_PRN)
 					{
+						if (stream.str().substr(stream.str().find("^")).length() > 4) break;
 						stream << (char)bc;
+						++InsertedCharacters;
 					}
 					break;
 				}
@@ -429,36 +485,22 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						string line = stream.str();
 						line.pop_back(); line.pop_back();
 						stream.str("");
-						stream << line << (char)bc << " ]";
+						stream << line << (char)bc;
+						if (InsertedCharacters > 0 && InsertedCharacters % 60 == 0) stream << '\n';
+						stream << " ]";
+						++InsertedCharacters;
 					}
 					break;
 				}
-				else if (FN_ON && !AlgebraON && (bc == 'A' || bc == 'B' || bc == 'C'))
-				{// Algebra defining mode
-					stream.str("");
-					stream << (char)bc << "=                                                          ";
-					FN_ON = false;
-					AlgebraON = true;
-					InsertedCharacters += 60;
-					break;
-				}
-				if ((bc >= UA && bc <= UC))
-				{
-					if (!AlgebraRestrict)
+				else if	(FactorialON) { // n! function is on
+					if (!isOpratr && bc != LEFT_PRN && bc != RIGHT_PRN)
 					{
-						if ((!stream.str().empty() && stream.str().back() >= ZERO && stream.str().back() <= NINE))
-							break; // algebra can not follow a ditgit or a factorial
-						AlgebraRestrict = true;
-					}
-					else break;
-				}
-				if		(FactorialON) { // n! function is on
-					if (bc != PLUS && bc != MINUS && bc != PER && bc != SOLIDUS && bc != LEFT_PRN && bc != RIGHT_PRN)
-					{
+						// if (InsertedCharacters > 7) break;
 						string line = stream.str();
 						line.pop_back(); line.pop_back();
 						stream.str("");
 						stream << line << (char)bc << ")!";
+						++InsertedCharacters;
 					}
 					break;
 				}
@@ -467,34 +509,40 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				//////////////////////// M A I N   I N S E R T I O N ////////////////////////
 				if (InsertedCharacters<300) { // --------- max insert lenth ------------
 					// word wrapping
-					bool notDigit = false;
-					if (bc == PLUS || bc == MINUS || bc == PER || bc == SOLIDUS || bc == LEFT_PRN || bc == RIGHT_PRN)
+					
+					if (isOpratr || bc == LEFT_PRN || bc == RIGHT_PRN)
 					{
-						if (OpInserted && (bc >= PLUS && bc <= SOLIDUS)) break; // prevent concatenation of operators
-						if (InsertedCharacters && ((stream.str().back() >= ZERO && stream.str().back() <= NINE) || (stream.str().back() >= UA && stream.str().back() <= UC)))
-							stream << ' ';
-						OpInserted = true;
+						if (bc == LEFT_PRN && (InsertedCharacters && !OpInserted && !LeftParenthesis)) break;
+						if (InsertedCharacters && ((strback >= ZERO && strback <= NINE) || (strback >= UA && strback <= UC)))
+							{ stream << ' ';}
 						DotInserted = false; // another number, another dot
 						AlgebraRestrict = false; // operator inserted, unlock AlgebraRestrict
 						sign = POSITIVE;	//operator inserted, reset SIGN_SWAP
-						notDigit = true;
+						RightParenthesis = false;
+						// not adjacent to Parenthesis
+						//isDigit = false;
 					}
-					
+					if (RightParenthesis && (isDigit || isAlgebra)) break; // can't concatenate digits with argebra
+					//if (bc == LEFT_PRN &&  < SOLIDUS || !LeftParenthesis))
 					//------------ Number Insersion ------------//
 					if (InsertedCharacters > 0 && InsertedCharacters % 60 == 0) stream << '\n';
 					// unlock operator insertion
-					if (bc != PLUS && bc != MINUS && bc != PER && bc != SOLIDUS) OpInserted = false;
+					//if (isDigit) OpInserted = false;
 					// input character
-					if	(AlgebraRestrict && bc >= ZERO && bc <= NINE) break; // can't concatenate digits with argebra
 					stream << (char)bc;
 					++InsertedCharacters;
 					
-					if (notDigit)
+					if (!isDigit)
 						stream << ' ';
 					
 					// parenthesis check
-					if		(bc == LEFT_PRN) ++Open_parenthesis;
-					else if	(bc == RIGHT_PRN) --Open_parenthesis;
+					OpInserted = (isOpratr)? true : false;
+					
+					if	(bc == LEFT_PRN) { ++Open_parenthesis; LeftParenthesis = true; }
+					else LeftParenthesis = false;
+					if	(bc == RIGHT_PRN) { --Open_parenthesis; RightParenthesis = true; }
+			
+					
 				}
 			}
 			else if (Op != NONE && !(IsFirstAlreadyReplaced)) {
@@ -513,6 +561,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 	
 	case FACTORIAL:
 		{
+			if (ResultOutputted || PowerON || FN_ON || CmplxON || SqrtON) break;
 			if (!FactorialON)
 			{
 				if (!stream.str().empty())
@@ -523,7 +572,6 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				stream << "()!";
 				FactorialON		= true;
 				DotInserted		= true; // no dot insertion is allowed
-				//AlgebraRestrict = true;
 				InsertedCharacters += 3;
 			}
 			else
@@ -540,7 +588,6 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					AlgebraON		= false;
 					FN_ON			= false;
 					CmplxON			= false;
-					//AlgebraRestrict = false;
 					Open_parenthesis = 0;
 				}
 				else
@@ -554,16 +601,20 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				FactorialON = false;
 				DotInserted = false;
 				OpInserted = false;
-				AlgebraRestrict = true;
 			}
 			break;
 		}
 	case POWER:
 		{
+			if (ResultOutputted || FactorialON || FN_ON || CmplxON || SqrtON) break;
+			string tmp = stream.str();
+			if (!tmp.empty() && tmp.back() == ' ') { tmp.pop_back(); stream.str(""); stream << tmp; }
+			
 			if (!stream.str().empty())
 			{
 				char in = stream.str().back();
-				if ((in >= ZERO && in <= NINE) || (in >= UA && in <= UC))
+				cout << "back : " << in << endl;
+				if ((in >= ZERO && in <= NINE) || (in >= UA && in <= UC) || in == 'i')
 				{// power mark must have digits or algebras on both sides
 					if (!PowerON)
 					{
@@ -586,6 +637,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			
 	case FN:
 		{
+		if (ResultOutputted || FactorialON || PowerON || CmplxON || SqrtON) break;
 			if (!FN_ON) FN_ON = true;
 			else		FN_ON = false;
 			break;
@@ -594,13 +646,26 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			
 	case COMPLEX:
 		{
+			if (ResultOutputted || FactorialON || PowerON || FN_ON || SqrtON) break;
 			if (!CmplxON)
 			{
+				if ((!stream.str().empty() && !OpInserted) || LeftParenthesis) break;
 				CmplxParts = REAL;
-				stream << "+i";
+				stream << " +i";
 				CmplxON		= true;
 				AlgebraRestrict = true;
-				InsertedCharacters += 2;
+				InsertedCharacters += 3;
+			}
+			else if (stream.str().substr(stream.str().find_last_of(" ")).at(1) == '+')
+			{
+				string tmp = stream.str();
+				stream.str("");
+				tmp.pop_back(); tmp.pop_back(); tmp.pop_back();
+				stream << tmp;
+				CmplxON = false;
+				AlgebraRestrict = false;
+				InsertedCharacters -= 3;
+				CmplxParts = IMAG;
 			}
 			else if (CmplxParts == REAL)
 			{
@@ -608,7 +673,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				sign = POSITIVE;
 				DotInserted = false;
 			}
-			else if (CmplxParts == IMAG)
+			else if (stream.str().substr(stream.str().find_last_of("+")).at(1) != 'i' && CmplxParts == IMAG)
 			{
 				stream << " ";
 				CmplxParts = REAL;
@@ -620,6 +685,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			
 	case SQRT:
 	{
+		if(ResultOutputted || FactorialON || PowerON || FN_ON || CmplxON) break;
 		if (!SqrtON)
 		{
 			if (!stream.str().empty())
@@ -629,7 +695,6 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			}
 			stream << "sqrt[  ]";
 			SqrtON = true;
-			AlgebraRestrict = true;
 			InsertedCharacters += 6;
 		}
 		else
@@ -724,7 +789,10 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 		FN_ON			= false;
 		CmplxON			= false;
 		AlgebraRestrict = false;
+		RightParenthesis = false;
+		OpInserted = false;
 		Open_parenthesis = 0;
+		Op = NONE;
 		break;
 			
 	case EQUAL: {
@@ -744,6 +812,8 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			FN_ON = false;
 			CmplxON = false;
 			AlgebraRestrict = false;
+			RightParenthesis = false;
+			OpInserted = false;
 			Open_parenthesis = 0;
 			Op = NONE;
 			
@@ -755,9 +825,9 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 		
 		if (AlgebraON)
 		{
-			if (stream.str() == "") stream << '0';
 			AG = stream.str().front();
-			line.erase(0, 60); // erase "X= "
+			line.erase(0, 3); // erase "X= "
+			if (line == "") stream << '0';
 			//InsertedCharacters -= 60;
 			size_t p;
 			while ((p = line.find("\n")) != string::npos)
@@ -767,19 +837,8 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			line = "( " + line + " )";
 			bool fully_expand = false;
 			size_t pos(0), pos1(0), pos2(0), pos3(0);
-			cout << line << endl;
-			/*
-			while ((pos = line.find("sqrt(", pos)) != string::npos)
-			{
-				cout << "sqrt( found" << endl;
-				pos += 4;
-				line.erase(pos, 1);
-				line.insert(pos, "[ ");
-				line.erase(line.find(")", pos, 1), 1);
-				line.insert(line.find(")", pos, 1), "] ");
-				cout << line << endl;
-			}
-			 */
+			cout << "Original input: " << line << endl;
+
 			
 			while (!fully_expand)
 			{
@@ -789,24 +848,6 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 				if (pos1 == string::npos && pos2 == string::npos && pos3 == string::npos) fully_expand = true;
 			}
 			
-			/*
-			DotInserted = false;
-			InsertedCharacters = 0;
-			IsFirstAlreadyReplaced = false;
-			sign = POSITIVE;
-			ResultOutputted = false;
-			FactorialON = false;
-			PowerON = false;
-			SqrtON = false;
-			AlgebraON = false;
-			FN_ON = false;
-			CmplxON = false;
-			AlgebraRestrict = false;
-			Open_parenthesis = 0;
-			Op = NONE;
-			stream.str("");
-			break;
-			 */
 		}
 		
 		if (!ResultOutputted || AlgebraON) {
@@ -830,9 +871,11 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					tkn = pf.substr(0, pos);
 					pf.erase(0, pos + 1);
 				}
+				if (tkn == "Invalid_Format") { result = new Integer;  result->setNum("Invalid Format"); }
 
 				while (1)
 				{
+					
 					if (tkn == "+" || tkn == "-" || tkn == "*" || tkn == "/" || tkn == "^" || tkn == "!" || tkn == "sqrt")
 					{
 						//if (Value) { delete Value; Value = NULL; }
@@ -842,6 +885,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						{
 							stream.str("");
 							stream << "Invalid Format";
+							ResultOutputted = true;
 							return;
 						}
 						else
@@ -855,6 +899,7 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						{
 							stream.str("");
 							stream << "Invalid Format";
+							ResultOutputted = true;
 							return;
 						}
 						else
@@ -968,16 +1013,24 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 								break;
 								
 						case POW:
+							try
 							{
-								int p = atoi(Value->getNum().c_str());
+								int p = atoi(Value->getNum().c_str()) * Value->getSign(); cout << p << endl;
 								if		(PrecValue->getType() == 'i' && Value->getType() == 'i')
 									result = &Power(*(Integer*)PrecValue, p);
 								else if (PrecValue->getType() == 'd' && Value->getType() == 'i')
 									result = &(Power(*(Decimal*)PrecValue, p));
 								else if (PrecValue->getType() == 'c' && Value->getType() == 'i')
 									result = &Power(*(Complex*)PrecValue, p);
-								break;
 							}
+							catch (invalid_argument e)
+							{
+								string m = e.what();
+								result = new Integer(m);
+							}
+								
+								break;
+							
 						case SQT:
 							{
 								if		(Value->getType() == 'i')
@@ -991,14 +1044,19 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						
 						case FCT:
 							{
-								if (10000 >= *(Integer*)Value)
+								if (Value->getType() != 'i')
+								{
+									Value = new Integer;
+									Value->setNum("Only Integer supports factorial function!");
+									last = true;
+								}
+								else if (10000 >= *(Integer*)Value)
 								{
 									Integer::Factorial(*(Integer*)Value);
 								}
 								else
 								{
-									string a = "Sorry, It'll take forever";
-									Value->setNum(a);
+									Value->setNum("Sorry, It'll take forever");
 									last = true;
 								}
 								result = Value;
@@ -1041,12 +1099,6 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			stream.str("");
 
 			/////////////////// A N S W E R /////////////////////
-	
-				
-			// console display
-			cout << "result->num : " << result->getNum() << endl;
-			cout << ((result->getSign() > 0)? "" : "-") << stream.str() << endl;
-			cout << "Full output : " << *result << endl;
 			
 			if (AlgebraON)
 			{
@@ -1071,7 +1123,8 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 						break;
 				}
 				if (result->getSign() == -1) tmp = "-" + tmp;
-				cout << "Algebra : " << tmp << endl;
+				cout << "------------------------------------------------" << endl
+				     << "Algebra(" << AG << ") : " << tmp << endl << endl;
 				switch (AG)
 				{
 					case 'A':		A = tmp; break;
@@ -1091,6 +1144,11 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 					case 'c':		stream << *(Complex*)result; break;
 					default:		break;
 				}
+				
+				// console display
+				cout << "------------------------------------------------" << endl
+				<< "Full output : " << endl << *result << endl << endl;
+				
 				// word wrapping
 				size_t len = stream.str().length();
 				string tmp = stream.str();
@@ -1124,6 +1182,8 @@ void Calculator::InsertCharacter(ButtonCode bc) {
 			FN_ON = false;
 			CmplxON = false;
 			AlgebraRestrict = false;
+			RightParenthesis = false;
+			OpInserted = false;
 			Open_parenthesis = 0;
 			Op = NONE;
 		}
@@ -1161,7 +1221,8 @@ string Calculator::lineParser(const string &line)
 		infix.erase(pos, 1);
 		infix.insert(pos, C);
 	}
-	cout << "in lineParser " << infix << endl;
+	
+	cout << "Infix   : " << infix << endl;
 
 	
 	while (!last)
@@ -1260,7 +1321,6 @@ string Calculator::lineParser(const string &line)
 			{// ']'
 				stack.pop_back(); // pop '['
 				postfix = postfix + " sqrt";
-				cout << postfix << endl;
 				break;
 			}
 			else
@@ -1283,8 +1343,8 @@ string Calculator::lineParser(const string &line)
 		stack.pop_back();
 	}
 
-	cout << stack << endl;
-	cout << postfix << endl;
+	// cout << stack << endl;
+	cout << "Postfix :" << postfix << endl;
 
 	if (postfix == " ") return "Invalid_Format";
 	else if (prn == 0) return postfix;

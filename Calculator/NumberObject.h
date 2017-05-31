@@ -44,6 +44,11 @@ public:
 		num = s;
 	}
 
+	void setNum(const char *s)
+	{
+		num = s;
+	}
+
 	void setSign(int n)
 	{
 		sign = n;

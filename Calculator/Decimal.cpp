@@ -292,6 +292,8 @@ Decimal& operator /(const Decimal &a, const Decimal &b)
 	y1 = dvr.substr(0, dvr.find(delimiter));
 	y2 = dvr.erase(0, dvr.find(delimiter) + delimiter.length());
 	
+	if (y1 == 0) throw invalid_argument("Divisor cannot be 0");
+	
 	Decimal *res = new Decimal(x1 * y2, x2 * y1);
 	res->sign = ((a.sign == 1)&&(b.sign == 1)) || ((a.sign == -1)&&(b.sign == -1))? 1 : -1;
 	if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
