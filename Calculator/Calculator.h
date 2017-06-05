@@ -81,12 +81,13 @@ private:
 	std::pair<sf::RectangleShape, sf::Text> Display; //Calculator display
 	sf::Text SignString; //+ - sign
 
-	NumberBase *PrecValue, *Value;
+	NumberObject *PrecValue, *Value;
 	string A, B, C;
 	Integer *intgr;
 	Decimal *decml;
 	bool DotInserted; //Has . already been inserted in this value?
 	bool OpInserted;
+	bool DigitInserted;
 	bool FactorialON;
 	bool PowerON;
 	bool SqrtON;
@@ -103,7 +104,6 @@ private:
 	std::ostringstream stream;
 	Sign sign;
 	Flag CmplxParts;
-	bool IsFirstAlreadyReplaced;
 	bool ResultOutputted;
 	int Open_parenthesis;
 

@@ -1,8 +1,16 @@
 #include "Decimal.h"
 #include <cmath>
+#include <ctime>
+#include <chrono>
 
 namespace
 {
+#ifdef _WIN32
+	double TIME_LIMIT = 1.9;
+#else
+	int TIME_LIMIT = 1900000;
+#endif
+
 	int LengthLimit = 50;
 	
 	Integer EuclideanAlgorithm(Integer &lhs, Integer &rhs)
@@ -158,6 +166,7 @@ Decimal::Decimal(const char *str)
 		numerator = Integer(num) * denominator + numerator;
 		
 		num = numerator.num + "/" + denominator.num;
+		if (numerator.num == "0") sign = 1;
 		
 		//if (denominator.num != "1") ReductionOfFraction(*this);
 	}
@@ -179,7 +188,6 @@ Decimal::Decimal(const Integer& n)
 
 Decimal::~Decimal()
 {
-	//cout << "delete " << this << endl;
 	//do nothing
 };
 
@@ -190,7 +198,75 @@ Decimal abs(const Decimal &a)
 	return tmp;
 }
 
-Decimal& operator +(const Decimal &a, const Decimal &b)
+Decimal Power(const Decimal &b, double power)
+{
+	int p = power;
+	string delimiter = "/";
+	string d = b.getNum();
+	Integer  x1, x2, res1("1"), res2("1");
+	Decimal dvd, dvr, result;
+	int pwr = p;
+	x1 = d.substr(0, d.find(delimiter));
+	x2 = d.erase(0, d.find(delimiter) + delimiter.length());
+
+	if ((power - (int)power) != 0)
+	{
+		if (power != 0.5) throw invalid_argument("Invalid input");
+		if (b < 0) throw invalid_argument("Undefined");
+		dvd = Power(x1, power);
+		dvr = Power(x2, power);
+		result = dvd / dvr;
+	}
+	else
+	{
+		// initialize TIME_LIMIT
+#ifdef _WIN32
+		chrono::time_point<chrono::system_clock> start, end;
+		start = chrono::system_clock::now();
+		end = start;
+		chrono::duration<double> elapsed_seconds;
+#else
+		clock_t start = std::clock(), end = std::clock();
+#endif
+
+		while (p > 0)
+		{
+			// exceed the time limit
+#ifdef _WIN32
+			elapsed_seconds = end - start;
+			if (elapsed_seconds.count() > TIME_LIMIT) { throw invalid_argument("Sorry, it'll take forever!"); }
+#else
+			if (end - start > TIME_LIMIT) { throw invalid_argument("Sorry, it'll take forever!"); }
+#endif
+
+			if (p & 1)
+			{ // Can also use (power & 1) to make code even faster
+				res1 = (res1 * x1);
+				res2 = (res2 * x2);
+			}
+			x1 = (x1 * x1);
+			x2 = (x2 * x2);
+			p >>= 1; // Can also use power >>= 1; to make code even faster
+
+#ifdef _WIN32
+			end = chrono::system_clock::now();
+#else
+			end = std::clock();
+#endif // _WIN32
+
+		}
+
+		result = Decimal(res1, res2);
+
+		if (b.getSign() == -1 && pwr % 2 == 1)
+			result.setSign(-1);
+		else
+			result.setSign(1);
+	}
+	return result;
+}
+
+Decimal operator +(const Decimal &a, const Decimal &b)
 {
 	string delimiter = "/";
 	string dvd = a.num; //augend
@@ -202,31 +278,31 @@ Decimal& operator +(const Decimal &a, const Decimal &b)
 	y1 = dvr.substr(0, dvr.find(delimiter));
 	y2 = dvr.erase(0, dvr.find(delimiter) + delimiter.length());
 	
-	Decimal *res;
+	Decimal res;
 	
 	if (a.sign == -1 && b.sign == 1) {
 		Decimal c = a, d = b;
 		c.sign = 1, d.sign = 1;
-		res = &(d - c);
-		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
-		return *res;
+		res = d - c;
+		if (res.getNum().length() > LengthLimit) ReductionOfFraction(res);
+		return res;
 	}
 	else if (a.sign == 1 && b.sign == -1) {
 		Decimal c = a, d = b;
 		c.sign = 1, d.sign = 1;
-		res = &(c - d);
-		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
-		return *res;
+		res = c - d;
+		if (res.getNum().length() > LengthLimit) ReductionOfFraction(res);
+		return res;
 	}
 	else {
-		res = new Decimal(x1 * y2 + x2 * y1, x2 * y2);
-		res->sign = a.sign;
-		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
-		return *res;
+		res = Decimal(x1 * y2 + x2 * y1, x2 * y2);
+		res.sign = a.sign;
+		if (res.getNum().length() > LengthLimit) ReductionOfFraction(res);
+		return res;
 	}
 }
 
-Decimal& operator -(const Decimal &a, const Decimal &b)
+Decimal operator -(const Decimal &a, const Decimal &b)
 {
 	string delimiter = "/";
 	string dvd = a.num; //subtrahend
@@ -238,31 +314,31 @@ Decimal& operator -(const Decimal &a, const Decimal &b)
 	y1 = dvr.substr(0, dvr.find(delimiter));
 	y2 = dvr.erase(0, dvr.find(delimiter) + delimiter.length());
 	
-	Decimal *res;
+	Decimal res;
 	
 	if ((a.sign == -1 && b.sign == 1) || (a.sign == 1 && b.sign == -1)) { // -x - y, x - (-y)
 		Decimal c = a, d = b;
 		c.sign = 1, d.sign = 1;
-		res = &(c + d);
-		res->sign = a.sign;
-		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
-		return *res;
+		res = c + d;
+		res.sign = a.sign;
+		if (res.getNum().length() > LengthLimit) ReductionOfFraction(res);
+		return res;
 	}
 	else { // -x - (-y), x - y
-		res = new Decimal(x1 * y2 - x2 * y1, x2 * y2);
+		res = Decimal(x1 * y2 - x2 * y1, x2 * y2);
 		
 		if (a.sign == 1 && b.sign == 1) {
-			res->sign = a >= b ? 1 : -1;
+			res.sign = a >= b ? 1 : -1;
 		}
 		else {
-			res->sign = a > b ? -1 : 1;
+			res.sign = a > b ? -1 : 1;
 		}
-		if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
-		return *res;
+		if (res.getNum().length() > LengthLimit) ReductionOfFraction(res);
+		return res;
 	}
 };
 
-Decimal& operator *(const Decimal &a, const Decimal &b)
+Decimal operator *(const Decimal &a, const Decimal &b)
 {
 	string delimiter = "/";
 	string dvd = a.num; //Multiplicand
@@ -274,13 +350,13 @@ Decimal& operator *(const Decimal &a, const Decimal &b)
 	y1 = dvr.substr(0, dvr.find(delimiter));
 	y2 = dvr.erase(0, dvr.find(delimiter) + delimiter.length());
 	
-	Decimal *res = new Decimal(x1 * y1, x2 * y2);
-	res->sign = ((a.sign == 1)&&(b.sign == 1)) || ((a.sign == -1)&&(b.sign == -1))? 1 : -1;
-	if (res->getNum().length() > LengthLimit) ReductionOfFraction(*res);
-	return *res;
+	Decimal res = Decimal(x1 * y1, x2 * y2);
+	res.sign = ((a.sign == 1)&&(b.sign == 1)) || ((a.sign == -1)&&(b.sign == -1))? 1 : -1;
+	if (res.getNum().length() > LengthLimit) ReductionOfFraction(res);
+	return res;
 };
 
-Decimal& operator /(const Decimal &a, const Decimal &b)
+Decimal operator /(const Decimal &a, const Decimal &b)
 {
 	string delimiter = "/";
 	string dvd = a.num; //Dividend
@@ -359,48 +435,6 @@ bool operator >=(const Decimal &a, const Decimal &b)
 		
 		return c >= d ? true : false;
 	}
-}
-
-Decimal& Power(const Decimal &b, double power)
-{
-	int p = power;
-	string delimiter = "/";
-	string d = b.getNum();
-	Integer  x1, x2, res1("1"), res2("1");
-	Decimal dvd, dvr, *result;
-	int pwr = p;
-	x1 = d.substr(0, d.find(delimiter));
-	x2 = d.erase(0, d.find(delimiter) + delimiter.length());
-	
-	if (power == 0.5)
-	{
-		dvd = Power(x1, power);
-		dvr = Power(x2, power);
-		result = &(dvd / dvr);
-	}
-	else
-	{
-		while(p > 0)
-		{
-			if(p % 2 == 1)
-			{ // Can also use (power & 1) to make code even faster
-				res1 = (res1 * x1);
-				res2 = (res2 * x2);
-			}
-			x1 = (x1 * x1);// % MOD;
-			x2 = (x2 * x2);
-			p = p / 2; // Can also use power >>= 1; to make code even faster
-			
-		}
-		
-		result = new Decimal(res1, res2);
-		
-		if (b.getSign() == -1 && pwr % 2 == 1)
-			result->setSign(-1);
-		else
-			result->setSign(1);
-	}
-	return *result;
 }
 
 bool operator <(const Decimal &a, const Decimal &b)

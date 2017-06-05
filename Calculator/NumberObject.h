@@ -11,15 +11,15 @@
 
 using namespace std;
 
-class NumberBase
+class NumberObject
 {
 protected:
 	string num;
 	char type;
 	int sign;
 public:
-	NumberBase() {};
-	virtual ~NumberBase()
+	NumberObject() {};
+	virtual ~NumberObject()
 	{
 		// cout << "delete " << this << endl;
 	};
@@ -64,13 +64,13 @@ public:
 #ifndef FRIEND_OPERATORS
 #define FRIEND_OPERATORS
 
-	friend ostream& operator <<(ostream &os, const NumberBase &b)
+	friend ostream& operator <<(ostream &os, const NumberObject &b)
 	{
 		//os << ((b.sign == -1) ? "-" : "") << b.num;
 		return b.output(os);
 	}
  
-	friend istream& operator >>(istream &is, NumberBase &b)
+	friend istream& operator >>(istream &is, NumberObject &b)
 	{
 		return b.input(is);
 	}

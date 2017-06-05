@@ -1,55 +1,11 @@
+// Complex.cpp
 //
-//  Complex.cpp
-//  Henry
-//
-//  Created by Henry Lin on 2017/5/25.
-//  Copyright © 2017年 Henry Lin. All rights reserved.
-//
+// Name: 林恆毅
+// Date: May 25, 2017
+// Last Update: June 1, 2017
 
 #include <cmath>
 #include "Complex.h"
-
-namespace
-{
-	
-	Integer EuclideanAlgorithm(Integer &lhs, Integer &rhs)
-	{
-		Integer a = lhs, b = rhs;
-		while( a > 0 && b > 0 )
-		{
-			if( a >= b )
-			{
-				a = a % b;
-			}
-			else if( b > a )
-			{
-				b = b % a;
-			}
-		}
-		if(a >= b)
-		{
-			return a;
-		}
-		else
-		{
-			return b;
-		}
-	}
-	
-	void ReductionOfFraction(Decimal &f)
-	{
-		string tmp = f.getNum();
-		string delimiter = "/";
-		Integer numerator = tmp.substr(0, tmp.find(delimiter));
-		Integer denominator = tmp.erase(0, tmp.find(delimiter) + delimiter.length());
-		Integer GCD = EuclideanAlgorithm(numerator, denominator);
-		numerator = IntDivide(numerator, GCD);
-		denominator = IntDivide(denominator, GCD);
-		tmp = numerator.getNum() + "/" + denominator.getNum();
-		f.setNum(tmp);
-	}
-	
-}
 
 Complex::Complex() {
 	num = "0+0";
@@ -78,8 +34,9 @@ Complex::Complex(const char* str) {
 		sign = 1;
 	}
 	
+	//set imagSign
 	if (arg.find('-') != string::npos || arg.find('+') != string::npos) {
-		if (arg.find('-') == string::npos) {
+		if (arg.find('-') == string::npos) { // can't find '-'
 			imagSign = 1;
 		}
 		else {
@@ -88,13 +45,13 @@ Complex::Complex(const char* str) {
 				arg[arg.find('-')] = '+';
 			}
 			else {
-				arg.erase(arg.find('-'), 1);
+				arg.erase(arg.find('-'), 1); // ex: 1+-2i -> 1+2i
 			}
 		}
-		arg.erase(arg.find('i'), 1);
+		arg.erase(arg.find('i'), 1); // erase 'i'
 	}
 	else {
-		arg += "+0";
+		arg += "+0"; // enter only real part
 		imagSign = 1;
 	}
 	num = arg;
@@ -153,39 +110,16 @@ istream& Complex::input(istream &is)
 
 ostream& Complex::output(ostream &os) const
 {
-	string delimiter = "+", str = getNum(), real, imag, res = "", rStr, iStr;
+	string delimiter = "+", str = getNum(), real, imag, res = "";
 	
 	real = str.substr(0, str.find(delimiter));
 	imag = str.erase(0, str.find(delimiter) + delimiter.length());
 	
 	Decimal r(real), i(imag);
 	
-	rStr = r.getNum(), iStr = i.getNum();
-	for (int j = 0, cnt = 0; j < rStr.length(); ++j) {
-		if (rStr[j] == '/') {
-			cnt++;
-		}
-		if (cnt == 2) {
-			rStr.erase(j);
-			r.setNum(rStr);
-			break;
-		}
-	}
-	
-	for (int j = 0, cnt = 0; j < iStr.length(); ++j) {
-		if (iStr[j] == '/') {
-			cnt++;
-		}
-		if (cnt == 2) {
-			iStr.erase(j);
-			i.setNum(iStr);
-			break;
-		}
-	}
-	
-	res = Decimal::Divide(r, 10);
-	res += "+";
-	res += Decimal::Divide(i, 10);
+	res = Decimal::Divide(r, 10); // output real part
+	res += "+"; // output '+'
+	res += Decimal::Divide(i, 10); // output imag part
 	
 	if (sign < 0) res = "-" + res;
 	
@@ -202,7 +136,7 @@ Complex& operator +(const Complex &a, const Complex &b)
 	string delimiter = "+";
 	string aug = a.num; //augend
 	string add = b.num; //addend
-	Decimal  r1, r2, i1, i2, *tmpR, *tmpI;
+	Decimal  r1, r2, i1, i2;
 	
 	r1 = aug.substr(0, aug.find(delimiter));
 	r1.setSign(a.getSign());
@@ -215,49 +149,7 @@ Complex& operator +(const Complex &a, const Complex &b)
 	
 	Complex *res;
 	
-	//Real part
-	if (a.sign == -1 && b.sign == 1) {
-		Decimal c = r1, d = r2;
-		c.setSign(1), d.setSign(1);
-		tmpR = &(d - c);
-		ReductionOfFraction(*tmpR);
-		
-	}
-	else if (a.sign == 1 && b.sign == -1) {
-		Decimal c = r1, d = r2;
-		c.setSign(1), d.setSign(1);
-		tmpR = &(c - d);
-		ReductionOfFraction(*tmpR);
-	}
-	else {
-		tmpR = new Decimal;
-		*tmpR = r1 +r2;
-		tmpR->setSign(a.sign);
-		ReductionOfFraction(*tmpR);
-	}
-	
-	//Imag part
-	if (a.imagSign == -1 && b.imagSign == 1) {
-		Decimal c = i1, d = i2;
-		c.setSign(1), d.setSign(1);
-		tmpI = &(d - c);
-		ReductionOfFraction(*tmpI);
-		
-	}
-	else if (a.imagSign == 1 && b.imagSign == -1) {
-		Decimal c = i1, d = i2;
-		c.setSign(1), d.setSign(1);
-		tmpI = &(c - d);
-		ReductionOfFraction(*tmpI);
-	}
-	else {
-		tmpI = new Decimal;
-		*tmpI = i1 + i2;
-		tmpI->setSign(a.imagSign);
-		ReductionOfFraction(*tmpI);
-	}
-	
-	res = new Complex(*tmpR, *tmpI);
+	res = new Complex(r1 + r2, i1 + i2);
 	
 	return *res;
 	
@@ -268,7 +160,7 @@ Complex& operator -(const Complex &a, const Complex &b)
 	string delimiter = "+";
 	string sub = a.num; //subtrahend
 	string min = b.num; //minuend
-	Decimal  r1, r2, i1, i2, *tmpR, *tmpI;
+	Decimal  r1, r2, i1, i2;
 	
 	r1 = sub.substr(0, sub.find(delimiter));
 	r1.setSign(a.getSign());
@@ -281,47 +173,7 @@ Complex& operator -(const Complex &a, const Complex &b)
 	
 	Complex *res;
 	
-	//real
-	if ((a.sign == -1 && b.sign == 1) || (a.sign == 1 && b.sign == -1)) { // -x - y, x - (-y)
-		Decimal c = r1, d = r2;
-		c.setSign(1), d.setSign(1);
-		tmpR = &(c + d);
-		tmpR->setSign(a.sign);
-		ReductionOfFraction(*tmpR);
-	}
-	else { // -x - (-y), x - y
-		tmpR = &(r1-r2);
-		
-		if (a.sign == 1 && b.sign == 1) {
-			tmpR->setSign(r1 >= r2 ? 1 : -1); // change here
-		}
-		else {
-			tmpR->setSign(r1 > r2 ? -1 : 1);
-		}
-		ReductionOfFraction(*tmpR);
-	}
-	
-	//imag
-	if ((a.imagSign == -1 && b.imagSign == 1) || (a.imagSign == 1 && b.imagSign == -1)) { // -x - y, x - (-y)
-		Decimal c = i1, d = i2;
-		c.setSign(1), d.setSign(1);
-		tmpI = &(c + d);
-		tmpI->setSign(a.imagSign);
-		ReductionOfFraction(*tmpI);
-	}
-	else { // -x - (-y), x - y
-		tmpI = &(i1-i2);
-		
-		if (a.imagSign == 1 && b.imagSign == 1) {
-			tmpI->setSign(i1 >= i2 ? 1 : -1); // change here
-		}
-		else {
-			tmpI->setSign(i1 > i2 ? -1 : 1);
-		}
-		ReductionOfFraction(*tmpI);
-	}
-	
-	res = new Complex(*tmpR, *tmpI);
+	res = new Complex(r1 - r2, i1 - i2);
 	
 	return *res;
 };
@@ -331,7 +183,7 @@ Complex& operator *(const Complex &a, const Complex &b)
 	string delimiter = "+";
 	string multid = a.num; //Multiplicand
 	string multir = b.num; //Multiplier
-	Decimal  r1, r2, i1, i2, *tmpR, *tmpI;
+	Decimal  r1, r2, i1, i2, tmpR, tmpI;
 	
 	r1 = multid.substr(0, multid.find(delimiter));
 	r1.setSign(a.getSign());
@@ -344,12 +196,10 @@ Complex& operator *(const Complex &a, const Complex &b)
 	
 	Complex *res;
 	
-	tmpR = &(r1*r2 - i1*i2);
-	tmpI = &(r1*i2 + i1*r2);
+	tmpR = r1*r2 - i1*i2; // real part
+	tmpI = r1*i2 + i1*r2; // imag part
 	
-	res = new Complex(*tmpR, *tmpI);
-	res->sign = tmpR->getSign();
-	res->imagSign = tmpI->getSign();
+	res = new Complex(tmpR, tmpI);
 	
 	return *res;
 };
@@ -359,7 +209,7 @@ Complex& operator /(const Complex &a, const Complex &b)
 	string delimiter = "+";
 	string dvd = a.num; //Dividend
 	string dvr = b.num; //Divisor
-	Decimal  r1, r2, i1, i2, *tmpR, *tmpI;
+	Decimal  r1, r2, i1, i2, tmpR, tmpI;
 	
 	r1 = dvd.substr(0, dvd.find(delimiter));
 	r1.setSign(a.getSign());
@@ -372,30 +222,28 @@ Complex& operator /(const Complex &a, const Complex &b)
 	
 	Complex *res;
 	
-	tmpR = &((r1 * r2 + i1 * i2) / (r2 * r2 + i2 * i2));
-	tmpI = &((i1 * r2 - r1 * i2) / (r2 * r2 + i2 * i2));
+	tmpR = (r1 * r2 + i1 * i2) / (r2 * r2 + i2 * i2); // real part
+	tmpI = (i1 * r2 - r1 * i2) / (r2 * r2 + i2 * i2); // imag part
 	
-	res = new Complex(*tmpR, *tmpI);
-	res->sign = tmpR->getSign();
-	res->imagSign = tmpI->getSign();
+	res = new Complex(tmpR, tmpI);
 	
 	return *res;
 };
 
 Complex& Power(const Complex &b, double power)
 {
+	
+	if (power <= 0 || (power - (int)power) != 0)
+		throw invalid_argument("Undefined");
+	
 	Complex *c = new Complex(b);
 	
 	for (int i = 0; i < power - 1; ++i) {
 		*c = *c * b;
 	}
+	
 	return *c;
 }
-
-
-
-
-
 
 
 

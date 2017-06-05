@@ -13,7 +13,7 @@
 #include "Decimal.h"
 #include "Integer.h"
 
-class Complex : public NumberBase
+class Complex : public NumberObject
 {
 public:
     friend class Integer;

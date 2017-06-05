@@ -8,7 +8,7 @@
 
 class Decimal;
 
-class Integer : public NumberBase
+class Integer : public NumberObject
 {
 private:
 	Integer& PrimeSwing(Integer &n);
@@ -21,6 +21,7 @@ public:
 	Integer(long ld);
 	Integer(int n);
 	Integer(const string&);
+	Integer(const Integer&);
 	~Integer();
 	
 	static void Factorial(Integer&);
@@ -32,21 +33,19 @@ public:
 	Integer operator ++();
 	Integer operator ++(int);
 	
-	friend Integer& IntDivide(const Integer &a, const Integer &b);
-	friend Integer& Power(const Integer&, int);
-	friend Decimal& Power(const Integer&, double);
-	friend Integer& operator +(const Integer &a, const Integer &b);
-	friend Integer& operator -(const Integer &a, const Integer &b);
-	friend Integer& operator *(const Integer &a, const Integer &b);
-	friend Decimal& operator /(const Integer &a, const Integer &b);
-	
-	friend Integer& operator %(const Integer &a, const Integer &b);
- 
-	friend bool operator >=(const Integer &a, const Integer &b);
-	friend bool operator >(const Integer &a, const Integer &b);
-	friend bool operator <(const Integer &a, const Integer &b);
-	friend bool operator <=(const Integer &a, const Integer &b);
-	friend bool operator ==(const Integer &a, const Integer &b);
+	friend Integer IntDivide(const Integer &a, const Integer &b);
+	friend Integer Power(const Integer&, int);
+	friend Decimal Power(const Integer&, double);
+	friend Integer operator +(const Integer &a, const Integer &b);
+	friend Integer operator -(const Integer &a, const Integer &b);
+	friend Integer operator *(const Integer &a, const Integer &b);
+	friend Decimal operator /(const Integer &a, const Integer &b);
+	friend Integer operator %(const Integer &a, const Integer &b);
+	friend bool		operator >=(const Integer &a, const Integer &b);
+	friend bool		operator >(const Integer &a, const Integer &b);
+	friend bool		operator <(const Integer &a, const Integer &b);
+	friend bool		operator <=(const Integer &a, const Integer &b);
+	friend bool		operator ==(const Integer &a, const Integer &b);
 	
 
 };

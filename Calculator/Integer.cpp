@@ -1,10 +1,19 @@
 #include "Integer.h"
 #include "Decimal.h"
 #include <cmath>
+#include <ctime>
+#include <chrono>
 #include <stdexcept>
 
 
 namespace  {
+
+#ifdef _WIN32
+	double TIME_LIMIT = 1.9;
+#else
+	int TIME_LIMIT = 1900000;
+#endif
+
 	Integer pwrRecursive(Integer base, int exp)
 	{
 		Integer tmp;
@@ -57,7 +66,7 @@ Integer::Integer(const string &str)
 	// eliminating leading 0s
 	for (int i = 0;; i++)
 	{
-		if (num[i] == '0' && i < str.length() - 1)
+		if (num[i] == '0' && i < num.length() - 1)
 		{
 			num[i] = '\0';
 		}
@@ -67,6 +76,13 @@ Integer::Integer(const string &str)
 			break;
 		}
 	}
+	
+	if (num == "0") sign = 1;
+}
+
+Integer::Integer(const Integer &a)
+{
+	*this = a;
 }
 
 Integer::~Integer()
@@ -76,37 +92,56 @@ Integer::~Integer()
 }
 
 
-Integer& Power(const Integer &b, int p)
+Integer Power(const Integer &b, int p)
 {
-	/*
-	Integer *result = new Integer;
-	*result = b;
-	*result = pwrRecursive(*result, p);
-	return *result;
-	 */
 	if (p < 0) throw invalid_argument("Invalid input");
-	
 	Integer base = b; // *(Integer*)(&b);
-	Integer *result(new Integer(1));
+	Integer result(1);
+
+	// initialize TIME_LIMIT
+#ifdef _WIN32
+	chrono::time_point<chrono::system_clock> start, end;
+	start = chrono::system_clock::now();
+	end = start;
+	chrono::duration<double> elapsed_seconds;
+#else
+	clock_t start = std::clock(), end = std::clock();
+#endif
 	
 	while(p > 0)
-	{
+	{	// exceed the time limit
+
+#ifdef _WIN32
+		elapsed_seconds = end - start;
+		if (elapsed_seconds.count() > TIME_LIMIT) { throw invalid_argument("Sorry, it'll take forever!"); }
+#else
+		if (end - start > TIME_LIMIT) { throw invalid_argument("Sorry, it'll take forever!"); }
+#endif
+
 		//if(p % 2 == 1)
 		if (p & 1)
-		{ // Can also use (power & 1) to make code even faster
-			*result = (*result * base);// % MOD;
+		{ 
+			result = (result * base);
 		}
-		base = (base * base);// % MOD;
-		//p = p / 2; // Can also use power >>= 1; to make code even faster
+		base = (base * base);
+		//p = p / 2; 
 		p >>= 1;
+
+#ifdef _WIN32
+		end = chrono::system_clock::now();
+#else
+		end = std::clock();
+#endif // _WIN32
+
 	}
-	return *result;
+	return result;
 	
 }
 
-Decimal& Power(const Integer &b, double p)
+Decimal Power(const Integer &b, double p)
 {
 	if (p != 0.5) throw invalid_argument("Invalid input");
+	if (b < 0) throw invalid_argument("Undefined");
 	string base = b.num;
 	string quotient("");
 	Integer dividend, divisor;
@@ -128,9 +163,26 @@ Decimal& Power(const Integer &b, double p)
 		dividend.num.push_back(base[0]);
 		base.erase(0, 1);
 	}
-	
+	// initialize TIME_LIMIT
+#ifdef _WIN32
+	chrono::time_point<chrono::system_clock> start, end;
+	start = chrono::system_clock::now();
+	end = start;
+	chrono::duration<double> elapsed_seconds;
+#else
+	clock_t start = std::clock(), end = std::clock();
+#endif
+
 	while (decimal_place <= 101)
 	{
+
+#ifdef _WIN32
+		elapsed_seconds = end - start;
+		if (elapsed_seconds.count() > TIME_LIMIT) { throw invalid_argument("Sorry, it'll take forever!"); }
+#else
+		if (end - start > TIME_LIMIT) { throw invalid_argument("Sorry, it'll take forever!"); }
+#endif
+		
 		/////////////////// DIVIDE ////////////////////
 		for (a = 1; a <= 10; a++)
 		{
@@ -164,15 +216,21 @@ Decimal& Power(const Integer &b, double p)
 		}
 		
 		divisor = divisor + a;
+		
+#ifdef _WIN32
+		end = chrono::system_clock::now();
+#else
+		end = std::clock();
+#endif // _WIN32
+
 	}
 	
-	
-	Decimal *res = new Decimal(quotient);
-	return *res;
+	return Decimal(quotient);
 }
 
 void Integer::Factorial(Integer &b)
 {
+	if (b < 0) throw invalid_argument("Undefined");
 	Integer tmp = b;
 	if ((b.num.back() - '0') % 2)
 	{
@@ -196,49 +254,27 @@ void Integer::Factorial(Integer &b)
 	
 }
 
-
-/*
-Factorial(n)
-if n < 2 then return(1) end_if return(Factorial(⌊n/2⌋)2 PrimeSwing(n))
-
-PrimeSwing(n) count ← 0
-for prime in Primes(2...n) do q ← n; p ← 1
-repeat
-q ← ⌊q/prime⌋
-if q is odd then p ← p·prime end_if
-until q = 0
-if p > 1 then FactorList[count++] ← p end_if
-end_for
-index ← 0 return(Product(FactorList, count))
-
-Product(list, len)
-if len = 0 then return(1) end_if
-if len = 1 then return(list[index++]) end_if
-hlen ← ⌊len/2⌋
-return(Product(list, len − hlen) · Product(list, hlen))
-*/
-
 ////////////// Friend Functions ////////////////
 
-Integer& operator +(const Integer&a, const Integer &b)
+Integer operator +(const Integer&a, const Integer &b)
 {
-	Integer *res = NULL;
+	Integer res(0);
 	
 	if (a.sign == -1 && b.sign == 1)
 	{// -x + y
 		Integer c = a, d = b;
 		c.sign = 1, d.sign = 1;
-		res = &(d - c);
+		res = d - c;
 		
-		return *res;
+		return res;
 	}
 	else if (a.sign == 1 && b.sign == -1)
 	{// x + (-y)
 		Integer c = a, d = b;
 		c.sign = 1, d.sign = 1;
-		res = &(c - d);
+		res = c - d;
 
-		return *res;
+		return res;
 	}
 	
 	string n1 = "", n2 = "";
@@ -306,21 +342,21 @@ Integer& operator +(const Integer&a, const Integer &b)
 	{// eliminating leading 0
 		ans = ans.substr(1, string::npos);
 	}
-	res = new Integer(ans);
-	res->sign = a.sign;
-	return *res;
+	res = ans;
+	res.sign = a.sign;
+	return res;
 }
 
-Integer& operator -(const Integer &a, const Integer &b)
+Integer operator -(const Integer &a, const Integer &b)
 {
-	Integer *res = NULL;
+	Integer res(0);
 	if ((a.sign == -1 && b.sign == 1) || (a.sign == 1 && b.sign == -1))
 	{// -x - y,	x - (-y)
 		Integer c = a, d = b;
 		c.sign = 1, d.sign = 1;
-		res = &(c + d);
-		res->sign = a.sign;
-		return *res;
+		res = c + d;
+		res.sign = a.sign;
+		return res;
 	}
 
 	string n1 = "", n2 = "";
@@ -402,15 +438,14 @@ Integer& operator -(const Integer &a, const Integer &b)
 		ans[index] += '0';
 	ans = ans.substr(index , string::npos);
 
-	res = new Integer(ans);
-	res->sign = sign;
-	return *res;
+	res = ans;
+	res.sign = sign;
+	return res;
 
 }
 
-Integer& operator *(const Integer &a, const Integer &b)
+Integer operator *(const Integer &a, const Integer &b)
 {
-	Integer *res = NULL;
 	string n1 = "";
 	string n2 = "";
 	size_t index = 0, max = 0, min = 0, lenA = a.num.length(), lenB = b.num.length();
@@ -490,12 +525,12 @@ Integer& operator *(const Integer &a, const Integer &b)
 		matrix[min] = matrix[min].substr(1, string::npos);
 	}
 	
-	res = new Integer(matrix[min]);
-	res->sign = sign;
-	return *res;
+	Integer res(matrix[min]);
+	res.sign = sign;
+	return res;
 }
 
-Decimal& operator /(const Integer &a, const Integer &b)
+Decimal operator /(const Integer &a, const Integer &b)
 {// Integer division converts two Integer operands into a Decimal
 	if (b.num == "0")
 		throw invalid_argument("Divisor cannot be 0");
@@ -566,7 +601,7 @@ bool operator ==(const Integer &a, const Integer &b)
 	else return false;
 }
 
-Integer& operator %(const Integer &a, const Integer &b)
+Integer operator %(const Integer &a, const Integer &b)
 {
 	string numerator = a.num;
 	string denominator = b.num;
@@ -608,7 +643,7 @@ Integer& operator %(const Integer &a, const Integer &b)
 	return *res;
 }
 
-Integer& IntDivide(const Integer &a, const Integer &b)
+Integer IntDivide(const Integer &a, const Integer &b)
 {
 	string numerator = a.num;
 	string denominator = b.num;
@@ -616,7 +651,7 @@ Integer& IntDivide(const Integer &a, const Integer &b)
 	
 	string quotient("");
 	
-	Integer *res = new Integer;
+	Integer res;
 	Integer dividend;
 	Integer divisor = b;
 	
@@ -646,8 +681,8 @@ Integer& IntDivide(const Integer &a, const Integer &b)
 	}
 	if (dividend.getNum() == "") dividend.setNum(zero);
 	
-	*res = quotient;
-	return *res;
+	res = quotient;
+	return res;
 }
 
 Integer Integer::operator ++()
